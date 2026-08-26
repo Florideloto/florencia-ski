@@ -1,10 +1,11 @@
 'use client';
 
 import Link from 'next/link';
-import { useLocale } from 'next-intl';
+import { useLocale, useTranslations } from 'next-intl';
 
 export default function Logo() {
   const locale = useLocale();
+  const t = useTranslations('logo');
   return (
     <Link href={`/${locale}`} className="flex items-center gap-3 group">
       <svg
@@ -47,7 +48,7 @@ export default function Logo() {
           className="text-xs tracking-[0.2em] text-brand-subtext uppercase"
           style={{ fontFamily: 'var(--font-barlow)', fontWeight: 400 }}
         >
-          Ski Instructor · Japan
+          {t('tagline')}
         </span>
       </div>
     </Link>

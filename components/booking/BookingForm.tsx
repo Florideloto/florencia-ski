@@ -1,17 +1,20 @@
 'use client';
 
 import { useState } from 'react';
-import { useTranslations } from 'next-intl';
+import { useTranslations, useLocale } from 'next-intl';
 import { format } from 'date-fns';
-import type { AvailabilitySlot } from '@/lib/types';
+import { getDateFnsLocale } from '@/lib/dateLocale';
+import { isHalfDaySlot } from '@/lib/bookingUtils';
+import type { AvailabilitySlot, Resort } from '@/lib/types';
 
 interface Props {
-  slot: AvailabilitySlot;
+  slots: AvailabilitySlot[];
+  resort: Resort;
+  resortOther: string;
   onBack: () => void;
 }
 
-type ServiceType = 'private' | 'kids' | 'offPiste' | 'group';
-type Duration = '3h' | '4h' | 'halfDay' | 'fullDay';
+type ServiceType = 'private' | 'kids' | 'offPiste';
 type Status = 'idle' | 'submitting' | 'success' | 'error';
 
 function parseSlotDate(dateStr: string): Date {
@@ -19,17 +22,20 @@ function parseSlotDate(dateStr: string): Date {
   return new Date(year, month - 1, day);
 }
 
-export default function BookingForm({ slot, onBack }: Props) {
+export default function BookingForm({ slots, resort, resortOther, onBack }: Props) {
   const t = useTranslations('booking');
+  const dateFnsLocale = getDateFnsLocale(useLocale());
   const [status, setStatus] = useState<Status>('idle');
   const [form, setForm] = useState({
     name: '',
     email: '',
     phone: '',
     service: '' as ServiceType | '',
-    duration: '' as Duration | '',
     message: '',
   });
+
+  const sortedSlots = [...slots].sort((a, b) => a.date.localeCompare(b.date));
+  const resortLabel = resort === 'Other' ? resortOther : resort;
 
   function handleChange(e: React.ChangeEvent<HTMLInputElement | HTMLTextAreaElement | HTMLSelectElement>) {
     setForm((f) => ({ ...f, [e.target.name]: e.target.value }));
@@ -42,7 +48,12 @@ export default function BookingForm({ slot, onBack }: Props) {
       const res = await fetch('/api/bookings', {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify({ ...form, slot_id: slot.id }),
+        body: JSON.stringify({
+          ...form,
+          slot_ids: sortedSlots.map((s) => s.id),
+          resort,
+          resort_other: resort === 'Other' ? resortOther : '',
+        }),
       });
       if (res.ok) {
         setStatus('success');
@@ -58,14 +69,6 @@ export default function BookingForm({ slot, onBack }: Props) {
     ['private', t('form.serviceOptions.private')],
     ['kids', t('form.serviceOptions.kids')],
     ['offPiste', t('form.serviceOptions.offPiste')],
-    ['group', t('form.serviceOptions.group')],
-  ];
-
-  const durationOptions: [Duration, string][] = [
-    ['3h', t('form.durationOptions.3h')],
-    ['4h', t('form.durationOptions.4h')],
-    ['halfDay', t('form.durationOptions.halfDay')],
-    ['fullDay', t('form.durationOptions.fullDay')],
   ];
 
   if (status === 'success') {
@@ -82,19 +85,26 @@ export default function BookingForm({ slot, onBack }: Props) {
         >
           {t('form.success')}
         </h3>
-        <p className="text-brand-subtext text-sm max-w-sm">
-          Florencia will reach out to confirm your lesson at{' '}
-          <strong className="text-white">
-            {format(parseSlotDate(slot.date), 'MMMM d')} · {slot.start_time.slice(0, 5)}
-          </strong>.
-        </p>
+        <div className="text-brand-subtext text-sm max-w-sm">
+          <p>{t('form.confirmationIntro')}</p>
+          <ul className="mt-2 flex flex-col gap-1">
+            {sortedSlots.map((slot) => (
+              <li key={slot.id} className="text-white">
+                {format(parseSlotDate(slot.date), 'MMMM d', { locale: dateFnsLocale })} · {slot.start_time.slice(0, 5)}
+                {' — '}
+                {isHalfDaySlot(slot) ? t('form.durationOptions.3h') : t('form.durationOptions.fullDay')}
+              </li>
+            ))}
+          </ul>
+          <p className="mt-2">📍 {resortLabel}</p>
+        </div>
         <a
-          href="https://wa.me/2616103962"
+          href={`https://wa.me/5492616103962?text=${encodeURIComponent(t('form.whatsappMessage'))}`}
           target="_blank"
           rel="noopener noreferrer"
           className="text-brand-ice text-sm hover:text-white transition-colors"
         >
-          Or message on WhatsApp →
+          {t('form.whatsappCta')}
         </a>
       </div>
     );
@@ -102,22 +112,29 @@ export default function BookingForm({ slot, onBack }: Props) {
 
   return (
     <div className="bg-brand-navy border border-brand-border">
-      {/* Slot summary + back */}
-      <div className="flex items-center justify-between px-6 py-4 border-b border-brand-border">
+      {/* Slots summary + back */}
+      <div className="flex items-start justify-between px-6 py-4 border-b border-brand-border gap-4">
         <div>
           <p className="text-brand-ice text-xs tracking-widest uppercase" style={{ fontFamily: 'var(--font-barlow)', fontWeight: 600 }}>
-            {t('selectedSlot')}
+            {t('datesSelected')}
           </p>
-          <p className="text-white text-sm font-medium mt-0.5">
-            {format(parseSlotDate(slot.date), 'MMMM d, yyyy')} · {slot.start_time.slice(0, 5)} – {slot.end_time.slice(0, 5)}
-          </p>
+          <ul className="mt-1 flex flex-col gap-0.5">
+            {sortedSlots.map((slot) => (
+              <li key={slot.id} className="text-white text-sm font-medium">
+                {format(parseSlotDate(slot.date), 'MMMM d', { locale: dateFnsLocale })} · {slot.start_time.slice(0, 5)}
+                {' – '}
+                {slot.end_time.slice(0, 5)}
+              </li>
+            ))}
+          </ul>
+          <p className="text-brand-subtext text-xs mt-1">📍 {resortLabel}</p>
         </div>
         <button
           onClick={onBack}
-          className="text-brand-subtext hover:text-white transition-colors text-xs tracking-widest uppercase"
+          className="shrink-0 text-brand-subtext hover:text-white transition-colors text-xs tracking-widest uppercase"
           style={{ fontFamily: 'var(--font-barlow)' }}
         >
-          ← Back
+          {t('form.back')}
         </button>
       </div>
 
@@ -191,25 +208,6 @@ export default function BookingForm({ slot, onBack }: Props) {
           >
             <option value="" disabled>{t('form.servicePlaceholder')}</option>
             {serviceOptions.map(([val, label]) => (
-              <option key={val} value={val}>{label}</option>
-            ))}
-          </select>
-        </div>
-
-        {/* Duration */}
-        <div className="flex flex-col gap-1.5">
-          <label className="text-xs text-brand-subtext tracking-widest uppercase" style={{ fontFamily: 'var(--font-barlow)' }}>
-            {t('form.duration')} *
-          </label>
-          <select
-            name="duration"
-            required
-            value={form.duration}
-            onChange={handleChange}
-            className="bg-brand-dark border border-brand-border px-4 py-2.5 text-white text-sm focus:outline-none focus:border-brand-ice transition-colors appearance-none"
-          >
-            <option value="" disabled>{t('form.durationPlaceholder')}</option>
-            {durationOptions.map(([val, label]) => (
               <option key={val} value={val}>{label}</option>
             ))}
           </select>

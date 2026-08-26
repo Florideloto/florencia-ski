@@ -1,7 +1,7 @@
 import type { Metadata } from 'next';
 import { Barlow_Condensed, Inter } from 'next/font/google';
 import { NextIntlClientProvider } from 'next-intl';
-import { getMessages } from 'next-intl/server';
+import { getMessages, getTranslations } from 'next-intl/server';
 import { notFound } from 'next/navigation';
 import { routing } from '@/i18n/routing';
 import '../globals.css';
@@ -17,12 +17,20 @@ const inter = Inter({
   subsets: ['latin'],
 });
 
-export const metadata: Metadata = {
-  title: 'Florencia Segovia — Ski Instructor in Japan',
-  description:
-    'Private ski lessons in Hakuba, Myoko and Shiga Kogen, Japan. Off-piste, kids, groups. Argentinian instructor, WFR certified, lawyer — one standard: safety.',
-  keywords: ['ski instructor Japan', 'Hakuba ski lessons', 'Myoko ski instructor', 'off-piste Japan', 'private ski lessons'],
-};
+export async function generateMetadata({
+  params,
+}: {
+  params: Promise<{ locale: string }>;
+}): Promise<Metadata> {
+  const { locale } = await params;
+  const t = await getTranslations({ locale, namespace: 'metadata' });
+
+  return {
+    title: t('title'),
+    description: t('description'),
+    keywords: t('keywords'),
+  };
+}
 
 export default async function LocaleLayout({
   children,

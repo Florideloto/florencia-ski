@@ -4,27 +4,13 @@ import { useTranslations } from 'next-intl';
 import { motion } from 'framer-motion';
 import Image from 'next/image';
 
+const DEFAULT_GRADIENT = 'h-[22%] bg-gradient-to-t from-brand-dark from-0% via-brand-dark/85 via-40% to-transparent';
+
 const methodItems = [
-  {
-    key: 'offPiste',
-    image: '/offpiste.jpeg',
-    imageAlt: 'Off-piste skiing in Japan backcountry',
-  },
-  {
-    key: 'kids',
-    image: '/kids.jpeg',
-    imageAlt: 'Florencia helping a child with ski equipment',
-  },
-  {
-    key: 'safety',
-    image: '/group.jpeg',
-    imageAlt: 'Ski group in deep powder snow Japan',
-  },
-  {
-    key: 'approach',
-    image: '/technique.jpeg',
-    imageAlt: 'Florencia Segovia demonstrating ski technique',
-  },
+  { key: 'offPiste', image: '/offpiste.jpeg', gradient: DEFAULT_GRADIENT },
+  { key: 'kids', image: '/kids.jpeg', gradient: DEFAULT_GRADIENT },
+  { key: 'safety', image: '/group.jpeg', gradient: 'h-[14%] bg-gradient-to-t from-brand-dark from-0% via-brand-dark/80 via-45% to-transparent' },
+  { key: 'approach', image: '/technique.jpeg', gradient: DEFAULT_GRADIENT },
 ] as const;
 
 export default function MethodSection() {
@@ -52,7 +38,7 @@ export default function MethodSection() {
             style={{
               fontFamily: 'var(--font-barlow)',
               fontWeight: 900,
-              fontSize: 'clamp(2.5rem, 6vw, 5rem)',
+              fontSize: 'clamp(2rem, 5vw, 3.75rem)',
               textTransform: 'uppercase',
               lineHeight: 1,
             }}
@@ -75,17 +61,17 @@ export default function MethodSection() {
               <div className="relative aspect-[16/10] overflow-hidden">
                 <Image
                   src={item.image}
-                  alt={item.imageAlt}
+                  alt={t(`items.${item.key}.alt`)}
                   fill
                   className="object-cover transition-transform duration-700 group-hover:scale-105"
                   sizes="(max-width: 768px) 100vw, 50vw"
                 />
-                <div className="absolute inset-0 bg-gradient-to-t from-brand-dark via-brand-dark/40 to-transparent" />
+                <div className={`absolute inset-x-0 bottom-0 ${item.gradient}`} />
               </div>
 
               <div className="p-8">
                 <h3
-                  className="text-white text-2xl mb-3"
+                  className="text-white text-xl mb-3"
                   style={{
                     fontFamily: 'var(--font-barlow)',
                     fontWeight: 800,

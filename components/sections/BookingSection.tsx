@@ -4,12 +4,35 @@ import { useState } from 'react';
 import { useTranslations } from 'next-intl';
 import { motion } from 'framer-motion';
 import BookingCalendar from '../booking/BookingCalendar';
+import BookingSummary from '../booking/BookingSummary';
 import BookingForm from '../booking/BookingForm';
-import type { AvailabilitySlot } from '@/lib/types';
+import CopyEmailButton from '@/components/CopyEmailButton';
+import type { AvailabilitySlot, Resort } from '@/lib/types';
+
+type Stage = 'calendar' | 'summary' | 'form';
 
 export default function BookingSection() {
   const t = useTranslations('booking');
-  const [selectedSlot, setSelectedSlot] = useState<AvailabilitySlot | null>(null);
+  const tFooter = useTranslations('footer');
+  const [stage, setStage] = useState<Stage>('calendar');
+  const [chosenSlots, setChosenSlots] = useState<AvailabilitySlot[]>([]);
+  const [resort, setResort] = useState<Resort | null>(null);
+  const [resortOther, setResortOther] = useState('');
+  const whatsappHref = `https://wa.me/5492616103962?text=${encodeURIComponent(tFooter('whatsappMessage'))}`;
+
+  function handleRemoveFromSummary(slotId: string) {
+    setChosenSlots((prev) => {
+      const next = prev.filter((s) => s.id !== slotId);
+      if (next.length === 0) setStage('calendar');
+      return next;
+    });
+  }
+
+  function handleConfirmSummary(chosenResort: Resort, chosenResortOther: string) {
+    setResort(chosenResort);
+    setResortOther(chosenResortOther);
+    setStage('form');
+  }
 
   return (
     <section id="booking" className="bg-brand-dark py-24 md:py-32 scroll-mt-16">
@@ -33,7 +56,7 @@ export default function BookingSection() {
             style={{
               fontFamily: 'var(--font-barlow)',
               fontWeight: 900,
-              fontSize: 'clamp(2.5rem, 6vw, 5rem)',
+              fontSize: 'clamp(1.6rem, 4vw, 2.75rem)',
               textTransform: 'uppercase',
               lineHeight: 1,
             }}
@@ -49,13 +72,31 @@ export default function BookingSection() {
           transition={{ duration: 0.7, delay: 0.1 }}
           viewport={{ once: true }}
         >
-          {selectedSlot ? (
-            <BookingForm
-              slot={selectedSlot}
-              onBack={() => setSelectedSlot(null)}
+          {stage === 'calendar' && (
+            <BookingCalendar
+              onContinue={(slots) => {
+                setChosenSlots(slots);
+                setStage('summary');
+              }}
             />
-          ) : (
-            <BookingCalendar onSlotSelect={setSelectedSlot} />
+          )}
+          {stage === 'summary' && (
+            <BookingSummary
+              slots={chosenSlots}
+              initialResort={resort}
+              initialResortOther={resortOther}
+              onRemove={handleRemoveFromSummary}
+              onConfirm={handleConfirmSummary}
+              onBack={() => setStage('calendar')}
+            />
+          )}
+          {stage === 'form' && resort && (
+            <BookingForm
+              slots={chosenSlots}
+              resort={resort}
+              resortOther={resortOther}
+              onBack={() => setStage('summary')}
+            />
           )}
         </motion.div>
 
@@ -68,21 +109,15 @@ export default function BookingSection() {
           className="mt-12 pt-8 border-t border-brand-border flex flex-col sm:flex-row items-center justify-between gap-6"
         >
           <p className="text-brand-subtext text-sm">
-            Prefer to reach out directly?
+            {t('directContact')}
           </p>
-          <div className="flex gap-4">
+          <div className="flex items-start gap-4">
+            <CopyEmailButton
+              buttonClassName="flex items-center gap-2 px-5 py-2.5 border border-brand-border text-brand-subtext text-xs tracking-widest uppercase font-semibold hover:border-white hover:text-white transition-all"
+              buttonStyle={{ fontFamily: 'var(--font-barlow)', fontWeight: 600 }}
+            />
             <a
-              href="mailto:Floriseg@proton.me"
-              className="flex items-center gap-2 px-5 py-2.5 border border-brand-border text-brand-subtext text-xs tracking-widest uppercase font-semibold hover:border-white hover:text-white transition-all"
-              style={{ fontFamily: 'var(--font-barlow)', fontWeight: 600 }}
-            >
-              <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={1.5} d="M3 8l7.89 5.26a2 2 0 002.22 0L21 8M5 19h14a2 2 0 002-2V7a2 2 0 00-2-2H5a2 2 0 00-2 2v10a2 2 0 002 2z" />
-              </svg>
-              Email
-            </a>
-            <a
-              href="https://wa.me/2616103962"
+              href={whatsappHref}
               target="_blank"
               rel="noopener noreferrer"
               className="flex items-center gap-2 px-5 py-2.5 border border-brand-border text-brand-subtext text-xs tracking-widest uppercase font-semibold hover:border-green-400 hover:text-green-400 transition-all"

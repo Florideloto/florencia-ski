@@ -95,6 +95,48 @@ alter table availability_slots add constraint availability_slots_date_start_time
   unique (date, start_time, end_time);
 
 -- =============================================
+-- 6. Remove "group" as a valid service type
+-- (Group Lesson was discontinued — confirmed via SELECT that zero
+-- booking_requests rows use service_type = 'group' before running this)
+-- =============================================
+alter table booking_requests drop constraint if exists booking_requests_service_type_check;
+alter table booking_requests add constraint booking_requests_service_type_check
+  check (service_type in ('private', 'kids', 'offPiste'));
+
+-- =============================================
+-- 7. Multi-day bookings: one request, several days, each with its
+-- own duration (derived from the linked slot's start/end time) — plus
+-- a resort/location field, chosen once for the whole booking.
+-- =============================================
+
+-- Links one booking request to every day (slot) the client picked.
+-- "slot_id" on booking_requests is kept for backward compatibility
+-- with existing single-day rows and stores the first day as a quick
+-- reference; the full list of days always lives here.
+create table if not exists booking_request_slots (
+  booking_request_id uuid references booking_requests(id) on delete cascade,
+  slot_id uuid references availability_slots(id) on delete cascade,
+  primary key (booking_request_id, slot_id)
+);
+
+alter table booking_request_slots enable row level security;
+create policy "Anyone can create booking_request_slots" on booking_request_slots
+  for insert with check (true);
+create policy "Admin can manage booking_request_slots" on booking_request_slots
+  for all using (auth.role() = 'authenticated');
+
+-- "duration" described a single booking's length; now that each day
+-- in a multi-day booking can have its own duration, it's no longer
+-- meaningful at the booking level. Made optional, not removed —
+-- existing rows keep their value.
+alter table booking_requests alter column duration drop not null;
+
+-- Resort/location — chosen once per booking, not per day.
+alter table booking_requests add column if not exists resort text
+  check (resort in ('Hakuba', 'Myoko', 'Shiga Kogen', 'Other'));
+alter table booking_requests add column if not exists resort_other text default '';
+
+-- =============================================
 -- Notes
 -- =============================================
 -- After running this SQL:

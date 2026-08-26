@@ -53,9 +53,13 @@ export default function AdminDashboardPage() {
   const fetchBookings = useCallback(async () => {
     const { data } = await supabase
       .from('booking_requests')
-      .select('*, slot:availability_slots(*)')
+      .select('*, slot:availability_slots(*), booking_request_slots(slot:availability_slots(*))')
       .order('created_at', { ascending: false });
-    setBookings(data ?? []);
+    const withSlots = (data ?? []).map((b) => ({
+      ...b,
+      slots: (b.booking_request_slots ?? []).map((r: { slot: unknown }) => r.slot).filter(Boolean),
+    }));
+    setBookings(withSlots);
   }, []);
 
   const fetchReviews = useCallback(async () => {
@@ -125,10 +129,13 @@ export default function AdminDashboardPage() {
     await supabase.from('booking_requests').update({ status }).eq('id', id);
     if (booking) {
       const wasConfirmed = booking.status === 'confirmed';
+      const slotIds = booking.slots && booking.slots.length > 0
+        ? booking.slots.map((s) => s.id)
+        : [booking.slot_id];
       if (status === 'confirmed') {
-        await supabase.from('availability_slots').update({ is_booked: true }).eq('id', booking.slot_id);
+        await supabase.from('availability_slots').update({ is_booked: true }).in('id', slotIds);
       } else if (status === 'cancelled' && wasConfirmed) {
-        await supabase.from('availability_slots').update({ is_booked: false }).eq('id', booking.slot_id);
+        await supabase.from('availability_slots').update({ is_booked: false }).in('id', slotIds);
       }
     }
     await fetchBookings();
@@ -373,14 +380,24 @@ export default function AdminDashboardPage() {
                           <span className="px-2 py-1 bg-brand-dark border border-brand-border">
                             {booking.service_type}
                           </span>
-                          <span className="px-2 py-1 bg-brand-dark border border-brand-border">
-                            {booking.duration}
-                          </span>
-                          {booking.slot && (
+                          {booking.resort && (
                             <span className="px-2 py-1 bg-brand-dark border border-brand-border">
-                              {booking.slot.date} · {booking.slot.start_time.slice(0, 5)}
+                              📍 {booking.resort === 'Other' ? booking.resort_other : booking.resort}
                             </span>
                           )}
+                          {booking.duration && (
+                            <span className="px-2 py-1 bg-brand-dark border border-brand-border">
+                              {booking.duration}
+                            </span>
+                          )}
+                        </div>
+                        <div className="mt-1 flex flex-col gap-0.5 text-xs text-brand-subtext">
+                          {(booking.slots && booking.slots.length > 0 ? booking.slots : booking.slot ? [booking.slot] : [])
+                            .slice()
+                            .sort((a, b) => a.date.localeCompare(b.date))
+                            .map((s) => (
+                              <span key={s.id}>{s.date} · {s.start_time.slice(0, 5)}–{s.end_time.slice(0, 5)}</span>
+                            ))}
                         </div>
                         {booking.message && (
                           <p className="mt-2 text-sm text-brand-subtext italic">&ldquo;{booking.message}&rdquo;</p>

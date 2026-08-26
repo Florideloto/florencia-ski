@@ -1,0 +1,11 @@
+{
+  "version": "0.0.1",
+  "configurations": [
+    {
+      "name": "florencia-ski-dev",
+      "runtimeExecutable": "C:\\Users\\Owner\\Desktop\\florencia-ski\\.claude\\dev-launch.cmd",
+      "runtimeArgs": [],
+      "port": 3000
+    }
+  ]
+}

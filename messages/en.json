@@ -4,21 +4,31 @@
     "method": "My Method",
     "services": "Services",
     "reviews": "Reviews",
-    "book": "Book Now"
+    "book": "Book Now",
+    "toggleMenu": "Toggle menu"
   },
   "hero": {
     "title": "From First Turns to Off-Piste",
     "subtitle": "One Standard: Safety",
     "location": "Ski Instructor in Japan",
-    "cta": "How I Work"
+    "cta": "How I Work",
+    "scroll": "Scroll",
+    "imageAlt": "Florencia Segovia skiing in deep powder snow in Japan"
   },
   "about": {
     "sectionLabel": "Who You Ski With",
     "title": "Florencia Segovia",
     "credentials": "Argentinian Ski Instructor · Lawyer · WFR Certified · Skydiver & Climber",
-    "tagline": "Passion. Professionalism. Safety.",
+    "wordPassion": "Passion.",
+    "wordProfessionalism": "Professionalism.",
+    "wordSafety": "Safety.",
     "bio": "Off the snow, I'm a lawyer, skydiver, and climber. They're not separate worlds to me — in all of them, I read risk, stay calm, and help you progress. My method comes from that mix of discipline and passion.",
-    "cta": "My Method"
+    "cta": "My Method",
+    "imageAlt": "Florencia Segovia, ski instructor in Japan",
+    "videoAriaLabel": "Video of Florencia skiing off-piste"
+  },
+  "logo": {
+    "tagline": "Ski Instructor · Japan"
   },
   "method": {
     "sectionLabel": "Earning Your Trust",
@@ -26,19 +36,23 @@
     "items": {
       "offPiste": {
         "title": "Off-Piste",
-        "text": "Terrain, snowpack, and weather read before every run. WFR and lawyer's mindset for every descent."
+        "text": "Terrain, snowpack, and weather read before every run. I'll help you pick the line you'll enjoy most — the kind of run you won't forget.",
+        "alt": "Off-piste skiing in Japan backcountry"
       },
       "kids": {
         "title": "Kids",
-        "text": "Real skills via games. Confidence first, risk never. Every child progresses at their own pace."
+        "text": "When you love what you do, it shows. I teach kids to ski, build confidence, and understand risk — so they grow into safe mountain people from the very start.",
+        "alt": "Florencia helping a child with ski equipment"
       },
       "safety": {
-        "title": "Always a Plan",
-        "text": "You'll always know the plan. Clear, shared safety logic — no surprises on the mountain."
+        "title": "Days You'll Want to Relive",
+        "text": "Every outing has a clear plan, built so you can enjoy it without surprises — the kind of day you'll end up telling and retelling.",
+        "alt": "Ski group in deep powder snow Japan"
       },
       "approach": {
-        "title": "Patient & Technical",
-        "text": "Patient, technical, serene. No shouting. Just progression, step by step."
+        "title": "Progress, Unhurried",
+        "text": "Progress without pressure. We go step by step, until the movement feels like your own.",
+        "alt": "Florencia Segovia demonstrating ski technique"
       }
     },
     "cta": "See Services"
@@ -49,7 +63,7 @@
     "items": {
       "private": {
         "title": "Private Lesson",
-        "description": "One-on-one instruction fully tailored to your level and goals. The most effective way to progress."
+        "description": "Exclusive one-on-one or two-person instruction — a preferential, specialized experience, fully tailored to your level and goals. The most effective way to progress. Want to bring more people? Just ask and we'll build something custom for you."
       },
       "kids": {
         "title": "Kids Lesson",
@@ -57,20 +71,20 @@
       },
       "offPiste": {
         "title": "Off-Piste & Backcountry",
-        "description": "Expert guidance in untracked snow with full risk assessment before every run."
-      },
-      "group": {
-        "title": "Group Lesson",
-        "description": "Small groups, personalized attention, shared energy. Learn together, progress together."
+        "description": "I plot my own lines through untracked snow and forest, with full risk assessment before every run."
       }
     },
     "duration": "Duration",
-    "halfDay": "Half Day (3h min.)",
-    "fullDay": "Full Day",
-    "language": "Taught in",
+    "durationToggle": {
+      "threeHours": "3 Hours",
+      "fullDay": "Full Day (6h)"
+    },
+    "language": "Language",
     "languages": "English · Spanish",
     "price": "Price",
-    "priceValue": "Contact for pricing",
+    "consult3h": "Contact for pricing",
+    "consultFull": "Contact for availability",
+    "priceNote": "Prices vary depending on the ski resort, area, and availability. Message me and I'll quote you based on your plan.",
     "inquire": "Book a Lesson"
   },
   "booking": {
@@ -79,10 +93,34 @@
     "subtitle": "Select a date to see available time slots. Season runs December through February.",
     "available": "Available",
     "unavailable": "Unavailable",
+    "chosen": "Your Pick",
+    "loading": "Loading…",
+    "directContact": "Prefer to reach out directly?",
+    "prevMonth": "Go to previous month",
+    "nextMonth": "Go to next month",
     "noSlots": "No availability on this date. Try another day.",
-    "selectDate": "Select a date",
+    "selectDate": "Pick one or more available days",
     "selectSlot": "Select a time slot",
     "selectedSlot": "Selected:",
+    "datesSelected": "Selected Dates",
+    "continueCta": "Continue",
+    "steps": {
+      "pickDay": "Pick one or more days",
+      "pickDuration": "Choose a duration for each",
+      "fillDetails": "Fill in your details"
+    },
+    "resort": {
+      "label": "Resort",
+      "other": "Other",
+      "otherPlaceholder": "Please specify",
+      "error": "Select a resort to continue."
+    },
+    "summary": {
+      "title": "Your Booking Summary",
+      "remove": "Remove",
+      "confirm": "Confirm and Continue",
+      "backToCalendar": "← Back to Choose Days"
+    },
     "form": {
       "title": "Your Details",
       "name": "Full Name",
@@ -96,14 +134,14 @@
       "serviceOptions": {
         "private": "Private Lesson",
         "kids": "Kids Lesson",
-        "offPiste": "Off-Piste / Backcountry",
-        "group": "Group Lesson"
+        "offPiste": "Off-Piste / Backcountry"
       },
       "duration": "Duration",
       "durationPlaceholder": "Choose duration",
       "durationOptions": {
         "3h": "3 hours",
         "4h": "4 hours",
+        "6h": "6 hours",
         "halfDay": "Half Day",
         "fullDay": "Full Day"
       },
@@ -112,7 +150,11 @@
       "submit": "Send Booking Request",
       "submitting": "Sending...",
       "success": "Request sent! Florencia will contact you within 24 hours.",
-      "error": "Something went wrong. Please try again or contact via WhatsApp."
+      "confirmationIntro": "Florencia will reach out to confirm your booking:",
+      "back": "← Back",
+      "error": "Something went wrong. Please try again or contact via WhatsApp.",
+      "whatsappCta": "Or message on WhatsApp →",
+      "whatsappMessage": "Hi Florencia, I'm writing about my booking"
     }
   },
   "reviews": {
@@ -121,11 +163,15 @@
     "empty": "Reviews coming soon.",
     "writeReview": "Write a Review",
     "hideForm": "Cancel",
+    "prevAria": "Previous review",
+    "nextAria": "Next review",
+    "goToAria": "Go to review {n}",
     "form": {
       "title": "Share Your Experience",
       "name": "Full Name",
       "namePlaceholder": "Your full name",
       "rating": "Rating",
+      "starAria": "{count, plural, one {# star} other {# stars}}",
       "text": "Your Review",
       "textPlaceholder": "Tell us about your lesson...",
       "image": "Photo (optional)",
@@ -141,8 +187,17 @@
     "location": "Hakuba · Myoko · Shiga Kogen, Japan",
     "contact": "Contact",
     "email": "Email",
+    "copyEmail": "Copy Email",
+    "copied": "Copied!",
     "whatsapp": "WhatsApp",
+    "whatsappMessage": "Hi Florencia, I'd like to ask about a lesson",
     "rights": "All rights reserved.",
-    "madeWith": "Built with care"
+    "madeWith": "Built with care",
+    "imageAlt": "Deep powder skiing Japan"
+  },
+  "metadata": {
+    "title": "Florencia Segovia — Ski Instructor in Japan",
+    "description": "Private ski lessons in Hakuba, Myoko and Shiga Kogen, Japan. Off-piste, kids, groups. Argentinian instructor, WFR certified, lawyer — one standard: safety.",
+    "keywords": "ski instructor Japan, Hakuba ski lessons, Myoko ski instructor, off-piste Japan, private ski lessons"
   }
 }

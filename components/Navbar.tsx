@@ -51,7 +51,7 @@ export default function Navbar() {
           <LanguageSwitcher />
           <a
             href="#booking"
-            className="px-6 py-2.5 border border-brand-ice text-brand-ice text-sm tracking-widest uppercase font-semibold hover:bg-brand-ice hover:text-brand-dark transition-all duration-200"
+            className="px-6 py-2.5 border border-brand-ice text-brand-ice text-xs tracking-widest uppercase font-bold hover:bg-brand-ice hover:text-brand-dark transition-all duration-200"
             style={{ fontFamily: 'var(--font-barlow)', fontWeight: 700 }}
           >
             {t('book')}
@@ -62,7 +62,7 @@ export default function Navbar() {
         <button
           className="md:hidden flex flex-col gap-1.5 p-2"
           onClick={() => setMenuOpen(!menuOpen)}
-          aria-label="Toggle menu"
+          aria-label={t('toggleMenu')}
         >
           <span className={`block w-6 h-0.5 bg-white transition-transform duration-200 ${menuOpen ? 'rotate-45 translate-y-2' : ''}`} />
           <span className={`block w-6 h-0.5 bg-white transition-opacity duration-200 ${menuOpen ? 'opacity-0' : ''}`} />
@@ -87,7 +87,7 @@ export default function Navbar() {
           <a
             href="#booking"
             onClick={() => setMenuOpen(false)}
-            className="px-5 py-3 border border-brand-ice text-brand-ice text-sm tracking-widest uppercase font-bold text-center hover:bg-brand-ice hover:text-brand-dark transition-all"
+            className="px-5 py-3 border border-brand-ice text-brand-ice text-xs tracking-widest uppercase font-bold text-center hover:bg-brand-ice hover:text-brand-dark transition-all"
             style={{ fontFamily: 'var(--font-barlow)' }}
           >
             {t('book')}

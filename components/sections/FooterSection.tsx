@@ -2,10 +2,12 @@
 
 import { useTranslations } from 'next-intl';
 import Image from 'next/image';
+import CopyEmailButton from '@/components/CopyEmailButton';
 
 export default function FooterSection() {
   const t = useTranslations('footer');
   const year = new Date().getFullYear();
+  const whatsappHref = `https://wa.me/5492616103962?text=${encodeURIComponent(t('whatsappMessage'))}`;
 
   return (
     <footer className="relative bg-brand-dark overflow-hidden">
@@ -13,7 +15,7 @@ export default function FooterSection() {
       <div className="absolute inset-0">
         <Image
           src="/powder.jpeg"
-          alt="Deep powder skiing Japan"
+          alt={t('imageAlt')}
           fill
           className="object-cover opacity-30"
           sizes="100vw"
@@ -37,7 +39,7 @@ export default function FooterSection() {
             Florencia Segovia
           </h2>
           <p
-            className="text-brand-ice text-sm tracking-[0.25em] uppercase"
+            className="text-brand-ice text-xs tracking-[0.3em] uppercase"
             style={{ fontFamily: 'var(--font-barlow)', fontWeight: 600 }}
           >
             {t('tagline')}
@@ -46,18 +48,10 @@ export default function FooterSection() {
 
         <p className="text-brand-subtext text-sm tracking-wider">{t('location')}</p>
 
-        <div className="flex gap-6">
+        <div className="flex flex-wrap items-start justify-center gap-6">
+          <CopyEmailButton buttonClassName="flex items-center gap-2 text-brand-subtext hover:text-white transition-colors text-sm" />
           <a
-            href="mailto:Floriseg@proton.me"
-            className="flex items-center gap-2 text-brand-subtext hover:text-white transition-colors text-sm"
-          >
-            <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-              <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={1.5} d="M3 8l7.89 5.26a2 2 0 002.22 0L21 8M5 19h14a2 2 0 002-2V7a2 2 0 00-2-2H5a2 2 0 00-2 2v10a2 2 0 002 2z" />
-            </svg>
-            Floriseg@proton.me
-          </a>
-          <a
-            href="https://wa.me/2616103962"
+            href={whatsappHref}
             target="_blank"
             rel="noopener noreferrer"
             className="flex items-center gap-2 text-brand-subtext hover:text-green-400 transition-colors text-sm"

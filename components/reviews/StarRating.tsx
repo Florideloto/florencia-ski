@@ -1,5 +1,7 @@
 'use client';
 
+import { useTranslations } from 'next-intl';
+
 interface Props {
   rating: number;
   onChange?: (rating: number) => void;
@@ -13,6 +15,7 @@ const SIZE_CLASSES = {
 };
 
 export default function StarRating({ rating, onChange, size = 'md' }: Props) {
+  const t = useTranslations('reviews.form');
   const interactive = Boolean(onChange);
   const sizeClass = SIZE_CLASSES[size];
 
@@ -36,7 +39,7 @@ export default function StarRating({ rating, onChange, size = 'md' }: Props) {
             type="button"
             role="radio"
             aria-checked={star === rating}
-            aria-label={`${star} star${star > 1 ? 's' : ''}`}
+            aria-label={t('starAria', { count: star })}
             onClick={() => onChange?.(star)}
             className="transition-transform hover:scale-110"
           >

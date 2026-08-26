@@ -2,6 +2,7 @@
 
 import { useState } from 'react';
 import { AnimatePresence, motion } from 'framer-motion';
+import { useTranslations } from 'next-intl';
 import Image from 'next/image';
 import type { Review } from '@/lib/types';
 import StarRating from './StarRating';
@@ -11,6 +12,7 @@ interface Props {
 }
 
 export default function ReviewsCarousel({ reviews }: Props) {
+  const t = useTranslations('reviews');
   const [index, setIndex] = useState(0);
   const [direction, setDirection] = useState(0);
 
@@ -32,7 +34,7 @@ export default function ReviewsCarousel({ reviews }: Props) {
         {reviews.length > 1 && (
           <button
             onClick={() => go(-1)}
-            aria-label="Previous review"
+            aria-label={t('prevAria')}
             className="shrink-0 text-brand-subtext hover:text-white transition-colors p-2"
           >
             <svg className="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
@@ -82,7 +84,7 @@ export default function ReviewsCarousel({ reviews }: Props) {
         {reviews.length > 1 && (
           <button
             onClick={() => go(1)}
-            aria-label="Next review"
+            aria-label={t('nextAria')}
             className="shrink-0 text-brand-subtext hover:text-white transition-colors p-2"
           >
             <svg className="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
@@ -98,7 +100,7 @@ export default function ReviewsCarousel({ reviews }: Props) {
             <button
               key={r.id}
               onClick={() => goTo(i)}
-              aria-label={`Go to review ${i + 1}`}
+              aria-label={t('goToAria', { n: i + 1 })}
               className={`h-1.5 transition-all duration-200 ${
                 i === index ? 'w-6 bg-brand-ice' : 'w-1.5 bg-brand-border'
               }`}

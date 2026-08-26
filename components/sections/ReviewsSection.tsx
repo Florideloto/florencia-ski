@@ -41,11 +41,23 @@ export default function ReviewsSection() {
           className="mb-14 text-center"
         >
           <p
-            className="text-brand-ice text-xs tracking-[0.3em] uppercase"
+            className="text-brand-ice text-xs tracking-[0.3em] uppercase mb-4"
             style={{ fontFamily: 'var(--font-barlow)', fontWeight: 600 }}
           >
             {t('sectionLabel')}
           </p>
+          <h2
+            className="text-white"
+            style={{
+              fontFamily: 'var(--font-barlow)',
+              fontWeight: 900,
+              fontSize: 'clamp(1.6rem, 4vw, 2.75rem)',
+              textTransform: 'uppercase',
+              lineHeight: 1,
+            }}
+          >
+            {t('title')}
+          </h2>
         </motion.div>
 
         <motion.div
@@ -76,7 +88,7 @@ export default function ReviewsSection() {
           ) : (
             <button
               onClick={() => setShowForm(true)}
-              className="px-6 py-2.5 border border-brand-ice text-brand-ice text-sm tracking-widest uppercase font-semibold hover:bg-brand-ice hover:text-brand-dark transition-all duration-200"
+              className="px-6 py-2.5 border border-brand-ice text-brand-ice text-xs tracking-widest uppercase font-bold hover:bg-brand-ice hover:text-brand-dark transition-all duration-200"
               style={{ fontFamily: 'var(--font-barlow)', fontWeight: 700 }}
             >
               {t('writeReview')}

@@ -4,21 +4,31 @@
     "method": "Mi Método",
     "services": "Servicios",
     "reviews": "Reseñas",
-    "book": "Reservar"
+    "book": "Reservar",
+    "toggleMenu": "Abrir o cerrar el menú"
   },
   "hero": {
     "title": "De los Primeros Giros al Fuera de Pista",
     "subtitle": "Un Solo Estándar: Seguridad",
     "location": "Instructora de Esquí en Japón",
-    "cta": "Cómo Trabajo"
+    "cta": "Cómo Trabajo",
+    "scroll": "Desplazate",
+    "imageAlt": "Florencia Segovia esquiando en nieve profunda en Japón"
   },
   "about": {
     "sectionLabel": "Con Quién Esquiás",
     "title": "Florencia Segovia",
     "credentials": "Instructora Argentina · Abogada · Certificada WFR · Paracaidista y Escaladora",
-    "tagline": "Pasión. Profesionalismo. Seguridad.",
+    "wordPassion": "Pasión.",
+    "wordProfessionalism": "Profesionalismo.",
+    "wordSafety": "Seguridad.",
     "bio": "Fuera de la nieve soy abogada, paracaidista y escaladora. Para mí no son mundos separados — en todos leo el riesgo, mantengo la calma y ayudo a progresar. Mi método viene de esa mezcla de disciplina y pasión.",
-    "cta": "Mi Método"
+    "cta": "Mi Método",
+    "imageAlt": "Florencia Segovia, instructora de esquí en Japón",
+    "videoAriaLabel": "Video de Florencia esquiando fuera de pista"
+  },
+  "logo": {
+    "tagline": "Instructora de Esquí · Japón"
   },
   "method": {
     "sectionLabel": "Ganando Tu Confianza",
@@ -26,19 +36,23 @@
     "items": {
       "offPiste": {
         "title": "Fuera de Pista",
-        "text": "Terreno, nieve y clima evaluados antes de cada bajada. Mentalidad WFR y de abogada en cada descenso."
+        "text": "Terreno, nieve y clima evaluados antes de cada bajada. Te ayudo y aconsejo para elegir la línea que más se disfrute — esa que no te vas a olvidar.",
+        "alt": "Esquí fuera de pista en el backcountry de Japón"
       },
       "kids": {
         "title": "Niños",
-        "text": "Habilidades reales a través de juegos. Confianza primero, riesgo nunca. Cada niño progresa a su ritmo."
+        "text": "Cuando amás lo que hacés, se contagia. Les enseño a esquiar, a ganar confianza y a entender el riesgo — para que sean montañistas seguros desde chiquitos.",
+        "alt": "Florencia ayudando a un niño con el equipo de esquí"
       },
       "safety": {
-        "title": "Siempre un Plan",
-        "text": "Siempre sabrás el plan. Lógica de seguridad clara y compartida — sin sorpresas en la montaña."
+        "title": "Días que Vas a Querer Repetir",
+        "text": "Cada salida tiene un plan claro, pensado para que disfrutes sin sorpresas — de esos días que después contás una y otra vez.",
+        "alt": "Grupo esquiando en nieve profunda en Japón"
       },
       "approach": {
-        "title": "Paciente y Técnica",
-        "text": "Paciente, técnica, serena. Sin gritos. Solo progresión, paso a paso."
+        "title": "Progresar, Sin Apuro",
+        "text": "Progresar sin presión. Vamos paso a paso, hasta que el movimiento se sienta propio.",
+        "alt": "Florencia Segovia demostrando técnica de esquí"
       }
     },
     "cta": "Ver Servicios"
@@ -49,7 +63,7 @@
     "items": {
       "private": {
         "title": "Clase Privada",
-        "description": "Instrucción uno a uno completamente adaptada a tu nivel y objetivos. La forma más efectiva de progresar."
+        "description": "Instrucción exclusiva de 1 a 2 personas — un servicio preferencial y especializado, completamente adaptado a tu nivel y objetivos. La forma más efectiva de progresar. ¿Quieren venir más personas? Consultanos y lo armamos a medida."
       },
       "kids": {
         "title": "Clase para Niños",
@@ -57,20 +71,20 @@
       },
       "offPiste": {
         "title": "Fuera de Pista y Backcountry",
-        "description": "Guía experta en nieve virgen con evaluación completa de riesgos antes de cada bajada."
-      },
-      "group": {
-        "title": "Clase Grupal",
-        "description": "Grupos pequeños, atención personalizada, energía compartida. Aprendé juntos, progresen juntos."
+        "description": "Diseño líneas propias en nieve virgen y bosques, con evaluación completa de riesgos antes de cada bajada."
       }
     },
     "duration": "Duración",
-    "halfDay": "Medio Día (mín. 3h)",
-    "fullDay": "Día Completo",
-    "language": "Idioma de instrucción",
+    "durationToggle": {
+      "threeHours": "3 Horas",
+      "fullDay": "Día Completo (6h)"
+    },
+    "language": "Idioma",
     "languages": "Inglés · Español",
     "price": "Precio",
-    "priceValue": "Consultar precio",
+    "consult3h": "Consultar",
+    "consultFull": "Consultar disponibilidad",
+    "priceNote": "Los precios varían según el ski resort, la zona y la disponibilidad. Escribime y te cotizo según tu plan.",
     "inquire": "Reservar una Clase"
   },
   "booking": {
@@ -79,10 +93,34 @@
     "subtitle": "Seleccioná una fecha para ver los horarios disponibles. Temporada de diciembre a febrero.",
     "available": "Disponible",
     "unavailable": "No disponible",
+    "chosen": "Tu Elección",
+    "loading": "Cargando…",
+    "directContact": "¿Preferís contactarme directamente?",
+    "prevMonth": "Ir al mes anterior",
+    "nextMonth": "Ir al mes siguiente",
     "noSlots": "Sin disponibilidad en esta fecha. Probá otro día.",
-    "selectDate": "Seleccioná una fecha",
+    "selectDate": "Elegí uno o más días disponibles",
     "selectSlot": "Elegí un horario",
     "selectedSlot": "Seleccionado:",
+    "datesSelected": "Fechas Elegidas",
+    "continueCta": "Continuar",
+    "steps": {
+      "pickDay": "Elegí uno o más días",
+      "pickDuration": "Elegí la duración de cada uno",
+      "fillDetails": "Completá tus datos"
+    },
+    "resort": {
+      "label": "Resort",
+      "other": "Otro",
+      "otherPlaceholder": "Aclaranos cuál",
+      "error": "Elegí un resort para continuar."
+    },
+    "summary": {
+      "title": "Resumen de tu Reserva",
+      "remove": "Quitar",
+      "confirm": "Confirmar y Continuar",
+      "backToCalendar": "← Volver a Elegir Días"
+    },
     "form": {
       "title": "Tus Datos",
       "name": "Nombre completo",
@@ -96,14 +134,14 @@
       "serviceOptions": {
         "private": "Clase Privada",
         "kids": "Clase para Niños",
-        "offPiste": "Fuera de Pista / Backcountry",
-        "group": "Clase Grupal"
+        "offPiste": "Fuera de Pista / Backcountry"
       },
       "duration": "Duración",
       "durationPlaceholder": "Elegí la duración",
       "durationOptions": {
         "3h": "3 horas",
         "4h": "4 horas",
+        "6h": "6 horas",
         "halfDay": "Medio Día",
         "fullDay": "Día Completo"
       },
@@ -112,7 +150,11 @@
       "submit": "Enviar Solicitud de Reserva",
       "submitting": "Enviando...",
       "success": "¡Solicitud enviada! Florencia se contactará en menos de 24 horas.",
-      "error": "Algo salió mal. Por favor intentá de nuevo o contactá por WhatsApp."
+      "confirmationIntro": "Florencia se va a contactar para confirmar tu reserva:",
+      "back": "← Volver",
+      "error": "Algo salió mal. Por favor intentá de nuevo o contactá por WhatsApp.",
+      "whatsappCta": "O escribime por WhatsApp →",
+      "whatsappMessage": "Hola Florencia, te escribo por mi reserva"
     }
   },
   "reviews": {
@@ -121,11 +163,15 @@
     "empty": "Reseñas próximamente.",
     "writeReview": "Escribir una Reseña",
     "hideForm": "Cancelar",
+    "prevAria": "Reseña anterior",
+    "nextAria": "Reseña siguiente",
+    "goToAria": "Ir a la reseña {n}",
     "form": {
       "title": "Contanos Tu Experiencia",
       "name": "Nombre completo",
       "namePlaceholder": "Tu nombre completo",
       "rating": "Calificación",
+      "starAria": "{count, plural, one {# estrella} other {# estrellas}}",
       "text": "Tu Reseña",
       "textPlaceholder": "Contanos cómo fue tu clase...",
       "image": "Foto (opcional)",
@@ -141,8 +187,17 @@
     "location": "Hakuba · Myoko · Shiga Kogen, Japón",
     "contact": "Contacto",
     "email": "Email",
+    "copyEmail": "Copiar Email",
+    "copied": "¡Copiado!",
     "whatsapp": "WhatsApp",
+    "whatsappMessage": "Hola Florencia, quiero consultar por una clase",
     "rights": "Todos los derechos reservados.",
-    "madeWith": "Hecho con cuidado"
+    "madeWith": "Hecho con cuidado",
+    "imageAlt": "Esquí en nieve profunda en Japón"
+  },
+  "metadata": {
+    "title": "Florencia Segovia — Instructora de Esquí en Japón",
+    "description": "Clases de esquí privadas en Hakuba, Myoko y Shiga Kogen, Japón. Fuera de pista, niños, grupos. Instructora argentina, certificada WFR, abogada — un solo estándar: seguridad.",
+    "keywords": "instructora de esquí en Japón, clases de esquí Hakuba, instructora de esquí Myoko, fuera de pista Japón, clases de esquí privadas"
   }
 }
