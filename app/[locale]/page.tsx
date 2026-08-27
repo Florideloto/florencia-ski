@@ -4,6 +4,7 @@ import AboutSection from '@/components/sections/AboutSection';
 import MethodSection from '@/components/sections/MethodSection';
 import ServicesSection from '@/components/sections/ServicesSection';
 import ReviewsSection from '@/components/sections/ReviewsSection';
+import CtaSection from '@/components/sections/CtaSection';
 import BookingSection from '@/components/sections/BookingSection';
 import FooterSection from '@/components/sections/FooterSection';
 
@@ -22,6 +23,7 @@ export default async function HomePage({
         <MethodSection />
         <ServicesSection />
         <ReviewsSection />
+        <CtaSection />
         <BookingSection />
       </main>
       <FooterSection />

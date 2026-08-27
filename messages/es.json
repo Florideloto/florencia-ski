@@ -182,6 +182,11 @@
       "error": "Algo salió mal. Por favor intentá de nuevo."
     }
   },
+  "cta": {
+    "imageAlt": "Grupo de amigos esquiando entre los árboles nevados",
+    "subtitle": "La montaña nos espera, ¿vamos?",
+    "button": "Reservar Ahora"
+  },
   "footer": {
     "tagline": "Un Solo Estándar: Seguridad.",
     "location": "Hakuba · Myoko · Shiga Kogen, Japón",

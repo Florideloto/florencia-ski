@@ -182,6 +182,11 @@
       "error": "Something went wrong. Please try again."
     }
   },
+  "cta": {
+    "imageAlt": "A group of friends skiing through the snowy trees",
+    "subtitle": "The mountain's waiting for us — shall we?",
+    "button": "Book Now"
+  },
   "footer": {
     "tagline": "One Standard: Safety.",
     "location": "Hakuba · Myoko · Shiga Kogen, Japan",
