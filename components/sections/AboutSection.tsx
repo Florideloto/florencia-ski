@@ -116,11 +116,12 @@ export default function AboutSection() {
             <div className="relative aspect-[9/16] max-w-[220px] sm:max-w-xs md:max-w-[260px] mx-auto lg:h-[460px] lg:w-auto lg:max-w-none rounded-2xl overflow-hidden shadow-xl shadow-black/40 ring-1 ring-brand-ice/20">
               <video
                 src="/video_esquiando_estable.mp4"
+                poster="/video_esquiando_poster.jpg"
                 autoPlay
                 muted
                 loop
                 playsInline
-                preload="none"
+                preload="auto"
                 aria-label={t('videoAriaLabel')}
                 className="absolute inset-0 w-full h-full object-cover"
               />
