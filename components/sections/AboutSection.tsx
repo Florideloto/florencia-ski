@@ -1,11 +1,21 @@
 'use client';
 
+import { useEffect, useState } from 'react';
 import { useTranslations } from 'next-intl';
 import { motion } from 'framer-motion';
 import Image from 'next/image';
 
 export default function AboutSection() {
   const t = useTranslations('about');
+  const [isMobile, setIsMobile] = useState(false);
+
+  useEffect(() => {
+    const mql = window.matchMedia('(max-width: 767px)');
+    setIsMobile(mql.matches);
+    const handler = (e: MediaQueryListEvent) => setIsMobile(e.matches);
+    mql.addEventListener('change', handler);
+    return () => mql.removeEventListener('change', handler);
+  }, []);
 
   return (
     <section id="about" className="bg-brand-navy py-24 md:py-32 scroll-mt-16">
@@ -105,28 +115,30 @@ export default function AboutSection() {
             </a>
           </motion.div>
 
-          {/* Video */}
-          <motion.div
-            initial={{ opacity: 0, x: 40 }}
-            whileInView={{ opacity: 1, x: 0 }}
-            transition={{ duration: 0.8, ease: 'easeOut', delay: 0.2 }}
-            viewport={{ once: true }}
-            className="relative md:col-span-2 lg:col-span-1"
-          >
-            <div className="relative aspect-[9/16] max-w-[220px] sm:max-w-xs md:max-w-[260px] mx-auto lg:h-[460px] lg:w-auto lg:max-w-none rounded-2xl overflow-hidden shadow-xl shadow-black/40 ring-1 ring-brand-ice/20">
-              <video
-                src="/video_esquiando_estable.mp4"
-                poster="/video_esquiando_poster.jpg"
-                autoPlay
-                muted
-                loop
-                playsInline
-                preload="auto"
-                aria-label={t('videoAriaLabel')}
-                className="absolute inset-0 w-full h-full object-cover"
-              />
-            </div>
-          </motion.div>
+          {/* Video — desktop/tablet only; on mobile the Hero already plays this clip */}
+          {!isMobile && (
+            <motion.div
+              initial={{ opacity: 0, x: 40 }}
+              whileInView={{ opacity: 1, x: 0 }}
+              transition={{ duration: 0.8, ease: 'easeOut', delay: 0.2 }}
+              viewport={{ once: true }}
+              className="relative md:col-span-2 lg:col-span-1"
+            >
+              <div className="relative aspect-[9/16] max-w-[220px] sm:max-w-xs md:max-w-[260px] mx-auto lg:h-[460px] lg:w-auto lg:max-w-none rounded-2xl overflow-hidden shadow-xl shadow-black/40 ring-1 ring-brand-ice/20">
+                <video
+                  src="/video_esquiando_estable.mp4"
+                  poster="/video_esquiando_poster.jpg"
+                  autoPlay
+                  muted
+                  loop
+                  playsInline
+                  preload="auto"
+                  aria-label={t('videoAriaLabel')}
+                  className="absolute inset-0 w-full h-full object-cover"
+                />
+              </div>
+            </motion.div>
+          )}
         </div>
       </div>
     </section>
