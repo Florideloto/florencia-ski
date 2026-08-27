@@ -137,6 +137,24 @@ alter table booking_requests add column if not exists resort text
 alter table booking_requests add column if not exists resort_other text default '';
 
 -- =============================================
+-- 8. Invert the availability model: open by default, blocked on demand.
+-- Every date in the season now offers both franjas unless it appears
+-- here (blocked by Florencia) or already has a confirmed booking.
+-- =============================================
+create table if not exists blocked_dates (
+  id uuid primary key default gen_random_uuid(),
+  date date not null unique,
+  note text default '',
+  created_at timestamptz default now()
+);
+
+alter table blocked_dates enable row level security;
+create policy "Public can read blocked dates" on blocked_dates
+  for select using (true);
+create policy "Admin can manage blocked dates" on blocked_dates
+  for all using (auth.role() = 'authenticated');
+
+-- =============================================
 -- Notes
 -- =============================================
 -- After running this SQL:

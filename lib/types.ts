@@ -11,6 +11,13 @@ export interface AvailabilitySlot {
 
 export type Resort = 'Hakuba' | 'Myoko' | 'Shiga Kogen' | 'Other';
 
+export interface BlockedDate {
+  id: string;
+  date: string;
+  note: string;
+  created_at: string;
+}
+
 export interface BookingRequest {
   id: string;
   slot_id: string;

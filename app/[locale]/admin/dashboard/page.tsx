@@ -6,18 +6,13 @@ import { useRouter } from 'next/navigation';
 import { useLocale } from 'next-intl';
 import { DayPicker } from 'react-day-picker';
 import { format, eachDayOfInterval, startOfMonth, endOfMonth, getDay, isWithinInterval, isBefore, parseISO } from 'date-fns';
-import type { AvailabilitySlot, BookingRequest, Review } from '@/lib/types';
+import type { BlockedDate, BookingRequest, Review } from '@/lib/types';
 import Logo from '@/components/Logo';
 import StarRating from '@/components/reviews/StarRating';
 import 'react-day-picker/style.css';
 
 const SEASON_START = new Date(2026, 11, 1);
 const SEASON_END = new Date(2027, 1, 28);
-
-const TIME_PRESETS = [
-  { id: 'full', label: 'Full Day (09:00 – 16:00)', start: '09:00', end: '16:00' },
-  { id: 'half', label: '3 Hours (09:00 – 12:00)', start: '09:00', end: '12:00' },
-] as const;
 
 const WEEKDAYS = [
   { id: 1, label: 'Mon' },
@@ -41,11 +36,11 @@ export default function AdminDashboardPage() {
   const locale = useLocale();
 
   const [tab, setTab] = useState<'availability' | 'bookings' | 'reviews'>('availability');
-  const [slots, setSlots] = useState<AvailabilitySlot[]>([]);
+  const [blockedDates, setBlockedDates] = useState<BlockedDate[]>([]);
   const [bookings, setBookings] = useState<BookingRequest[]>([]);
   const [reviews, setReviews] = useState<Review[]>([]);
   const [selectedDays, setSelectedDays] = useState<Date[]>([]);
-  const [selectedPresetIds, setSelectedPresetIds] = useState<string[]>(['full']);
+  const [blockNote, setBlockNote] = useState('');
   const [month, setMonth] = useState<Date>(SEASON_START);
   const [rangeFrom, setRangeFrom] = useState('');
   const [rangeTo, setRangeTo] = useState('');
@@ -59,14 +54,14 @@ export default function AdminDashboardPage() {
     if (!session) router.push(`/${locale}/admin/login`);
   }, [router, locale]);
 
-  const fetchSlots = useCallback(async () => {
+  const fetchBlockedDates = useCallback(async () => {
     const { data } = await supabase
-      .from('availability_slots')
+      .from('blocked_dates')
       .select('*')
       .gte('date', '2026-12-01')
       .lte('date', '2027-02-28')
       .order('date', { ascending: true });
-    setSlots(data ?? []);
+    setBlockedDates(data ?? []);
   }, []);
 
   const fetchBookings = useCallback(async () => {
@@ -91,20 +86,14 @@ export default function AdminDashboardPage() {
 
   useEffect(() => {
     checkAuth().then(async () => {
-      await Promise.all([fetchSlots(), fetchBookings(), fetchReviews()]);
+      await Promise.all([fetchBlockedDates(), fetchBookings(), fetchReviews()]);
       setLoading(false);
     });
-  }, [checkAuth, fetchSlots, fetchBookings, fetchReviews]);
+  }, [checkAuth, fetchBlockedDates, fetchBookings, fetchReviews]);
 
   async function handleSignOut() {
     await supabase.auth.signOut();
     router.push(`/${locale}/admin/login`);
-  }
-
-  function togglePreset(id: string) {
-    setSelectedPresetIds((prev) =>
-      prev.includes(id) ? prev.filter((p) => p !== id) : [...prev, id]
-    );
   }
 
   function toggleWeekday(id: number) {
@@ -134,40 +123,35 @@ export default function AdminDashboardPage() {
     setSelectedDays((prev) => mergeDays(prev, days));
   }
 
-  async function addSlots() {
-    if (selectedDays.length === 0 || selectedPresetIds.length === 0) return;
+  async function addBlockedDates() {
+    if (selectedDays.length === 0) return;
     setSaving(true);
     setMessage('');
 
-    const presets = TIME_PRESETS.filter((p) => selectedPresetIds.includes(p.id));
+    const rows = selectedDays.map((day) => ({
+      date: format(day, 'yyyy-MM-dd'),
+      note: blockNote,
+    }));
 
-    const rows = selectedDays.flatMap((day) =>
-      presets.map((preset) => ({
-        date: format(day, 'yyyy-MM-dd'),
-        start_time: preset.start + ':00',
-        end_time: preset.end + ':00',
-        is_booked: false,
-      }))
-    );
-
-    const { error } = await supabase.from('availability_slots').upsert(rows, {
-      onConflict: 'date,start_time,end_time',
+    const { error } = await supabase.from('blocked_dates').upsert(rows, {
+      onConflict: 'date',
       ignoreDuplicates: false,
     });
 
     if (error) {
-      setMessage('Error saving slots: ' + error.message);
+      setMessage('Error blocking days: ' + error.message);
     } else {
-      setMessage(`✓ ${rows.length} slot(s) saved.`);
+      setMessage(`✓ ${rows.length} day(s) blocked.`);
       setSelectedDays([]);
-      await fetchSlots();
+      setBlockNote('');
+      await fetchBlockedDates();
     }
     setSaving(false);
   }
 
-  async function deleteSlot(id: string) {
-    await supabase.from('availability_slots').delete().eq('id', id);
-    await fetchSlots();
+  async function removeBlockedDate(id: string) {
+    await supabase.from('blocked_dates').delete().eq('id', id);
+    await fetchBlockedDates();
   }
 
   async function updateBookingStatus(id: string, status: 'confirmed' | 'cancelled') {
@@ -205,7 +189,25 @@ export default function AdminDashboardPage() {
     await fetchReviews();
   }
 
-  const availableDates = new Set(slots.map((s) => s.date));
+  const blockedDateSet = new Set(blockedDates.map((b) => b.date));
+
+  const agendaRows = bookings
+    .filter((b) => b.status !== 'cancelled')
+    .flatMap((b) => {
+      const bookingSlots = b.slots && b.slots.length > 0 ? b.slots : b.slot ? [b.slot] : [];
+      return bookingSlots.map((s) => ({
+        key: `${b.id}-${s.id}`,
+        date: s.date,
+        start_time: s.start_time,
+        end_time: s.end_time,
+        clientName: b.client_name,
+        resort: b.resort === 'Other' ? b.resort_other : b.resort,
+        status: b.status,
+      }));
+    })
+    .sort((a, b) => a.date.localeCompare(b.date));
+
+  const takenDates = new Set(agendaRows.filter((r) => r.status === 'confirmed').map((r) => r.date));
 
   const statusColor = {
     pending: 'text-yellow-400',
@@ -263,7 +265,7 @@ export default function AdminDashboardPage() {
               }`}
               style={{ fontFamily: 'var(--font-barlow)', fontWeight: 700 }}
             >
-              {t === 'availability' && `Availability (${slots.length})`}
+              {t === 'availability' && `Availability (${blockedDates.length} blocked)`}
               {t === 'bookings' && `Bookings (${bookings.filter(b => b.status === 'pending').length} pending)`}
               {t === 'reviews' && `Reviews (${reviews.filter(r => !r.approved).length} pending)`}
             </button>
@@ -273,14 +275,17 @@ export default function AdminDashboardPage() {
         {/* Availability tab */}
         {tab === 'availability' && (
           <div className="grid lg:grid-cols-2 gap-8">
-            {/* Add slots */}
+            {/* Block days */}
             <div className="bg-brand-navy border border-brand-border p-6">
               <h2
-                className="text-white text-lg mb-6"
+                className="text-white text-lg mb-1"
                 style={{ fontFamily: 'var(--font-barlow)', fontWeight: 800, textTransform: 'uppercase' }}
               >
-                Add Available Days
+                Block Days
               </h2>
+              <p className="text-brand-subtext text-xs mb-6">
+                Every day is bookable by default. Pick days below to mark them unavailable.
+              </p>
 
               <DayPicker
                 mode="multiple"
@@ -291,10 +296,12 @@ export default function AdminDashboardPage() {
                 startMonth={SEASON_START}
                 endMonth={SEASON_END}
                 modifiers={{
-                  already: (date) => availableDates.has(format(date, 'yyyy-MM-dd')),
+                  blocked: (date) => blockedDateSet.has(format(date, 'yyyy-MM-dd')),
+                  taken: (date) => takenDates.has(format(date, 'yyyy-MM-dd')),
                 }}
                 modifiersClassNames={{
-                  already: '!text-brand-ice !font-bold',
+                  blocked: '!text-red-400 !font-bold',
+                  taken: '!text-yellow-400 !font-bold',
                 }}
                 classNames={{
                   root: 'w-full',
@@ -311,8 +318,17 @@ export default function AdminDashboardPage() {
                 }}
               />
 
-              {/* Quick add: date range + recurring weekdays */}
-              <div className="mt-6 pt-5 border-t border-brand-border flex flex-col gap-4">
+              <div className="flex items-center gap-4 mt-3">
+                <span className="flex items-center gap-1.5 text-xs text-brand-subtext">
+                  <span className="w-2.5 h-2.5 rounded-full bg-red-400" /> Blocked
+                </span>
+                <span className="flex items-center gap-1.5 text-xs text-brand-subtext">
+                  <span className="w-2.5 h-2.5 rounded-full bg-yellow-400" /> Booked
+                </span>
+              </div>
+
+              {/* Quick select: date range + recurring weekdays */}
+              <div className="mt-4 pt-5 border-t border-brand-border flex flex-col gap-4">
                 <div>
                   <label className="text-xs text-brand-subtext uppercase tracking-widest mb-2 block" style={{ fontFamily: 'var(--font-barlow)' }}>
                     Add Date Range
@@ -382,32 +398,15 @@ export default function AdminDashboardPage() {
 
               <div className="mt-6 flex flex-col gap-1.5">
                 <label className="text-xs text-brand-subtext uppercase tracking-widest" style={{ fontFamily: 'var(--font-barlow)' }}>
-                  Time Slots
+                  Note (optional)
                 </label>
-                <div className="flex flex-col gap-2">
-                  {TIME_PRESETS.map((preset) => {
-                    const active = selectedPresetIds.includes(preset.id);
-                    return (
-                      <button
-                        key={preset.id}
-                        type="button"
-                        onClick={() => togglePreset(preset.id)}
-                        className={`flex items-center justify-between px-4 py-2.5 border text-sm transition-colors ${
-                          active
-                            ? 'border-brand-ice bg-brand-ice/10 text-white'
-                            : 'border-brand-border text-brand-subtext hover:border-white hover:text-white'
-                        }`}
-                      >
-                        <span>{preset.label}</span>
-                        {active && (
-                          <svg className="w-4 h-4 text-brand-ice" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                            <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M5 13l4 4L19 7" />
-                          </svg>
-                        )}
-                      </button>
-                    );
-                  })}
-                </div>
+                <input
+                  type="text"
+                  value={blockNote}
+                  onChange={(e) => setBlockNote(e.target.value)}
+                  placeholder="e.g. Vacation, booked via Instagram"
+                  className="bg-brand-dark border border-brand-border px-4 py-2.5 text-white text-sm placeholder:text-brand-muted focus:outline-none focus:border-brand-ice transition-colors"
+                />
               </div>
 
               {message && (
@@ -415,59 +414,86 @@ export default function AdminDashboardPage() {
               )}
 
               <button
-                onClick={addSlots}
-                disabled={saving || selectedDays.length === 0 || selectedPresetIds.length === 0}
+                onClick={addBlockedDates}
+                disabled={saving || selectedDays.length === 0}
                 className="mt-4 w-full py-3 bg-brand-ice text-brand-dark text-sm tracking-widest uppercase font-bold hover:bg-white disabled:opacity-50 transition-all"
                 style={{ fontFamily: 'var(--font-barlow)', fontWeight: 700 }}
               >
                 {saving
                   ? 'Saving…'
-                  : `Save ${selectedDays.length} Day${selectedDays.length !== 1 ? 's' : ''} × ${selectedPresetIds.length} Slot${selectedPresetIds.length !== 1 ? 's' : ''}`}
+                  : `Block ${selectedDays.length} Day${selectedDays.length !== 1 ? 's' : ''}`}
               </button>
             </div>
 
-            {/* Existing slots list */}
-            <div className="bg-brand-navy border border-brand-border p-6">
-              <h2
-                className="text-white text-lg mb-6"
-                style={{ fontFamily: 'var(--font-barlow)', fontWeight: 800, textTransform: 'uppercase' }}
-              >
-                Current Availability
-              </h2>
+            {/* Blocked days + agenda */}
+            <div className="flex flex-col gap-8">
+              <div className="bg-brand-navy border border-brand-border p-6">
+                <h2
+                  className="text-white text-lg mb-6"
+                  style={{ fontFamily: 'var(--font-barlow)', fontWeight: 800, textTransform: 'uppercase' }}
+                >
+                  Blocked Days
+                </h2>
 
-              {slots.length === 0 ? (
-                <p className="text-brand-subtext text-sm">No slots added yet.</p>
-              ) : (
-                <div className="flex flex-col gap-2 max-h-96 overflow-y-auto pr-1">
-                  {slots.map((slot) => (
-                    <div
-                      key={slot.id}
-                      className={`flex items-center justify-between px-4 py-2.5 border ${
-                        slot.is_booked ? 'border-brand-border opacity-50' : 'border-brand-border hover:border-brand-ice'
-                      }`}
-                    >
-                      <div>
-                        <p className="text-white text-sm font-medium">{slot.date}</p>
-                        <p className="text-brand-subtext text-xs">
-                          {slot.start_time.slice(0, 5)} – {slot.end_time.slice(0, 5)}
-                          {slot.is_booked && <span className="ml-2 text-yellow-400">· Booked</span>}
-                        </p>
-                      </div>
-                      {!slot.is_booked && (
+                {blockedDates.length === 0 ? (
+                  <p className="text-brand-subtext text-sm">No days blocked — everything is open.</p>
+                ) : (
+                  <div className="flex flex-col gap-2 max-h-56 overflow-y-auto pr-1">
+                    {blockedDates.map((b) => (
+                      <div
+                        key={b.id}
+                        className="flex items-center justify-between px-4 py-2.5 border border-brand-border hover:border-red-400/50"
+                      >
+                        <div>
+                          <p className="text-white text-sm font-medium">{b.date}</p>
+                          {b.note && <p className="text-brand-subtext text-xs">{b.note}</p>}
+                        </div>
                         <button
-                          onClick={() => deleteSlot(slot.id)}
+                          onClick={() => removeBlockedDate(b.id)}
                           className="text-brand-muted hover:text-red-400 transition-colors p-1"
-                          aria-label="Delete slot"
+                          aria-label="Unblock day"
                         >
                           <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                             <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={1.5} d="M19 7l-.867 12.142A2 2 0 0116.138 21H7.862a2 2 0 01-1.995-1.858L5 7m5 4v6m4-6v6m1-10V4a1 1 0 00-1-1h-4a1 1 0 00-1 1v3M4 7h16" />
                           </svg>
                         </button>
-                      )}
-                    </div>
-                  ))}
-                </div>
-              )}
+                      </div>
+                    ))}
+                  </div>
+                )}
+              </div>
+
+              <div className="bg-brand-navy border border-brand-border p-6">
+                <h2
+                  className="text-white text-lg mb-6"
+                  style={{ fontFamily: 'var(--font-barlow)', fontWeight: 800, textTransform: 'uppercase' }}
+                >
+                  Upcoming Bookings
+                </h2>
+
+                {agendaRows.length === 0 ? (
+                  <p className="text-brand-subtext text-sm">No bookings yet.</p>
+                ) : (
+                  <div className="flex flex-col gap-2 max-h-96 overflow-y-auto pr-1">
+                    {agendaRows.map((row) => (
+                      <div key={row.key} className="flex items-center justify-between px-4 py-2.5 border border-brand-border">
+                        <div>
+                          <p className="text-white text-sm font-medium">
+                            {row.date} · {row.start_time.slice(0, 5)}–{row.end_time.slice(0, 5)}
+                          </p>
+                          <p className="text-brand-subtext text-xs">
+                            {row.clientName}
+                            {row.resort && ` · 📍 ${row.resort}`}
+                          </p>
+                        </div>
+                        <span className={`text-xs font-semibold uppercase tracking-wider shrink-0 ml-3 ${statusColor[row.status]}`}>
+                          {row.status}
+                        </span>
+                      </div>
+                    ))}
+                  </div>
+                )}
+              </div>
             </div>
           </div>
         )}

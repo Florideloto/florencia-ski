@@ -50,7 +50,7 @@ export default function BookingForm({ slots, resort, resortOther, onBack }: Prop
         headers: { 'Content-Type': 'application/json' },
         body: JSON.stringify({
           ...form,
-          slot_ids: sortedSlots.map((s) => s.id),
+          slots: sortedSlots.map((s) => ({ date: s.date, start_time: s.start_time, end_time: s.end_time })),
           resort,
           resort_other: resort === 'Other' ? resortOther : '',
         }),
