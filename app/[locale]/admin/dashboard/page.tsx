@@ -5,7 +5,7 @@ import { supabase } from '@/lib/supabase';
 import { useRouter } from 'next/navigation';
 import { useLocale } from 'next-intl';
 import { DayPicker } from 'react-day-picker';
-import { format } from 'date-fns';
+import { format, eachDayOfInterval, startOfMonth, endOfMonth, getDay, isWithinInterval, isBefore, parseISO } from 'date-fns';
 import type { AvailabilitySlot, BookingRequest, Review } from '@/lib/types';
 import Logo from '@/components/Logo';
 import StarRating from '@/components/reviews/StarRating';
@@ -15,11 +15,26 @@ const SEASON_START = new Date(2026, 11, 1);
 const SEASON_END = new Date(2027, 1, 28);
 
 const TIME_PRESETS = [
-  { id: 'full', label: '09:00 – 16:00 (Full Day)', start: '09:00', end: '16:00' },
-  { id: 'morning', label: '09:00 – 12:00', start: '09:00', end: '12:00' },
-  { id: 'afternoon', label: '12:00 – 16:00', start: '12:00', end: '16:00' },
-  { id: 'lateAfternoon', label: '13:00 – 16:00', start: '13:00', end: '16:00' },
+  { id: 'full', label: 'Full Day (09:00 – 16:00)', start: '09:00', end: '16:00' },
+  { id: 'half', label: '3 Hours (09:00 – 12:00)', start: '09:00', end: '12:00' },
 ] as const;
+
+const WEEKDAYS = [
+  { id: 1, label: 'Mon' },
+  { id: 2, label: 'Tue' },
+  { id: 3, label: 'Wed' },
+  { id: 4, label: 'Thu' },
+  { id: 5, label: 'Fri' },
+  { id: 6, label: 'Sat' },
+  { id: 0, label: 'Sun' },
+] as const;
+
+function mergeDays(current: Date[], additions: Date[]): Date[] {
+  const map = new Map<string, Date>();
+  for (const d of current) map.set(format(d, 'yyyy-MM-dd'), d);
+  for (const d of additions) map.set(format(d, 'yyyy-MM-dd'), d);
+  return Array.from(map.values()).sort((a, b) => a.getTime() - b.getTime());
+}
 
 export default function AdminDashboardPage() {
   const router = useRouter();
@@ -31,6 +46,10 @@ export default function AdminDashboardPage() {
   const [reviews, setReviews] = useState<Review[]>([]);
   const [selectedDays, setSelectedDays] = useState<Date[]>([]);
   const [selectedPresetIds, setSelectedPresetIds] = useState<string[]>(['full']);
+  const [month, setMonth] = useState<Date>(SEASON_START);
+  const [rangeFrom, setRangeFrom] = useState('');
+  const [rangeTo, setRangeTo] = useState('');
+  const [selectedWeekdays, setSelectedWeekdays] = useState<number[]>([]);
   const [saving, setSaving] = useState(false);
   const [message, setMessage] = useState('');
   const [loading, setLoading] = useState(true);
@@ -86,6 +105,33 @@ export default function AdminDashboardPage() {
     setSelectedPresetIds((prev) =>
       prev.includes(id) ? prev.filter((p) => p !== id) : [...prev, id]
     );
+  }
+
+  function toggleWeekday(id: number) {
+    setSelectedWeekdays((prev) =>
+      prev.includes(id) ? prev.filter((w) => w !== id) : [...prev, id]
+    );
+  }
+
+  function addDateRange() {
+    if (!rangeFrom || !rangeTo) return;
+    const start = parseISO(rangeFrom);
+    const end = parseISO(rangeTo);
+    if (isBefore(end, start)) return;
+    const days = eachDayOfInterval({ start, end }).filter((d) =>
+      isWithinInterval(d, { start: SEASON_START, end: SEASON_END })
+    );
+    setSelectedDays((prev) => mergeDays(prev, days));
+    setRangeFrom('');
+    setRangeTo('');
+  }
+
+  function addWeekdaysInMonth() {
+    if (selectedWeekdays.length === 0) return;
+    const days = eachDayOfInterval({ start: startOfMonth(month), end: endOfMonth(month) })
+      .filter((d) => selectedWeekdays.includes(getDay(d)))
+      .filter((d) => isWithinInterval(d, { start: SEASON_START, end: SEASON_END }));
+    setSelectedDays((prev) => mergeDays(prev, days));
   }
 
   async function addSlots() {
@@ -240,6 +286,8 @@ export default function AdminDashboardPage() {
                 mode="multiple"
                 selected={selectedDays}
                 onSelect={(days) => setSelectedDays(days ?? [])}
+                month={month}
+                onMonthChange={setMonth}
                 startMonth={SEASON_START}
                 endMonth={SEASON_END}
                 modifiers={{
@@ -262,6 +310,75 @@ export default function AdminDashboardPage() {
                   today: 'underline',
                 }}
               />
+
+              {/* Quick add: date range + recurring weekdays */}
+              <div className="mt-6 pt-5 border-t border-brand-border flex flex-col gap-4">
+                <div>
+                  <label className="text-xs text-brand-subtext uppercase tracking-widest mb-2 block" style={{ fontFamily: 'var(--font-barlow)' }}>
+                    Add Date Range
+                  </label>
+                  <div className="flex items-center gap-2">
+                    <input
+                      type="date"
+                      value={rangeFrom}
+                      onChange={(e) => setRangeFrom(e.target.value)}
+                      min={format(SEASON_START, 'yyyy-MM-dd')}
+                      max={format(SEASON_END, 'yyyy-MM-dd')}
+                      className="flex-1 bg-brand-dark border border-brand-border px-3 py-2 text-white text-sm focus:outline-none focus:border-brand-ice"
+                    />
+                    <span className="text-brand-subtext text-xs">to</span>
+                    <input
+                      type="date"
+                      value={rangeTo}
+                      onChange={(e) => setRangeTo(e.target.value)}
+                      min={rangeFrom || format(SEASON_START, 'yyyy-MM-dd')}
+                      max={format(SEASON_END, 'yyyy-MM-dd')}
+                      className="flex-1 bg-brand-dark border border-brand-border px-3 py-2 text-white text-sm focus:outline-none focus:border-brand-ice"
+                    />
+                    <button
+                      type="button"
+                      onClick={addDateRange}
+                      disabled={!rangeFrom || !rangeTo}
+                      className="shrink-0 px-4 py-2 border border-brand-ice text-brand-ice text-xs tracking-widest uppercase font-bold hover:bg-brand-ice hover:text-brand-dark disabled:opacity-30 disabled:cursor-not-allowed transition-colors"
+                    >
+                      Add
+                    </button>
+                  </div>
+                </div>
+
+                <div>
+                  <label className="text-xs text-brand-subtext uppercase tracking-widest mb-2 block" style={{ fontFamily: 'var(--font-barlow)' }}>
+                    Add Recurring Weekdays — {format(month, 'MMMM yyyy')}
+                  </label>
+                  <div className="flex flex-wrap gap-1.5 mb-2">
+                    {WEEKDAYS.map((w) => {
+                      const active = selectedWeekdays.includes(w.id);
+                      return (
+                        <button
+                          key={w.id}
+                          type="button"
+                          onClick={() => toggleWeekday(w.id)}
+                          className={`px-3 py-1.5 text-xs tracking-widest uppercase font-semibold border transition-colors ${
+                            active
+                              ? 'border-brand-ice bg-brand-ice/10 text-white'
+                              : 'border-brand-border text-brand-subtext hover:border-white hover:text-white'
+                          }`}
+                        >
+                          {w.label}
+                        </button>
+                      );
+                    })}
+                  </div>
+                  <button
+                    type="button"
+                    onClick={addWeekdaysInMonth}
+                    disabled={selectedWeekdays.length === 0}
+                    className="w-full px-4 py-2 border border-brand-ice text-brand-ice text-xs tracking-widest uppercase font-bold hover:bg-brand-ice hover:text-brand-dark disabled:opacity-30 disabled:cursor-not-allowed transition-colors"
+                  >
+                    Add All Selected Weekdays in {format(month, 'MMMM')}
+                  </button>
+                </div>
+              </div>
 
               <div className="mt-6 flex flex-col gap-1.5">
                 <label className="text-xs text-brand-subtext uppercase tracking-widest" style={{ fontFamily: 'var(--font-barlow)' }}>
