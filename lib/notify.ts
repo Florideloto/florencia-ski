@@ -11,6 +11,14 @@ interface BookingDay {
   end_time: string;
 }
 
+function extractErrorMessage(error: unknown): string {
+  if (error instanceof Error) return error.message;
+  if (error && typeof error === 'object' && 'message' in error) {
+    return String((error as { message: unknown }).message);
+  }
+  return String(error);
+}
+
 function parseDay(dateStr: string): Date {
   const [year, month, day] = dateStr.split('-').map(Number);
   return new Date(year, month - 1, day);
@@ -29,7 +37,7 @@ async function logEmailFailure(params: {
       booking_request_id: params.bookingRequestId ?? null,
       recipient: params.recipient,
       status: 'failed',
-      error_message: params.error instanceof Error ? params.error.message : String(params.error),
+      error_message: extractErrorMessage(params.error),
     });
   } catch (logErr) {
     console.error('email_logs insert failed:', logErr);
@@ -77,7 +85,7 @@ export async function sendBookingNotificationEmail(params: BookingNotificationPa
     .join('\n');
 
   try {
-    await resend.emails.send({
+    const { error } = await resend.emails.send({
       from: process.env.RESEND_FROM_EMAIL || 'Florencia Ski <onboarding@resend.dev>',
       to,
       subject: `Nueva reserva: ${params.name}`,
@@ -94,6 +102,10 @@ export async function sendBookingNotificationEmail(params: BookingNotificationPa
         `Mensaje: ${params.message || '—'}`,
       ].join('\n'),
     });
+    // The Resend SDK never throws for API-level failures (bad key, unverified
+    // domain, rate limit, etc.) — it resolves with { error } instead, so that
+    // has to be checked explicitly or a failed send looks identical to a sent one.
+    if (error) throw error;
   } catch (err) {
     console.error('notification email error:', err);
     await logEmailFailure({
@@ -208,12 +220,13 @@ export async function sendBookingConfirmationEmail(params: BookingConfirmationPa
   ].join('\n');
 
   try {
-    await resend.emails.send({
+    const { error } = await resend.emails.send({
       from: process.env.RESEND_FROM_EMAIL || 'Florencia Ski <onboarding@resend.dev>',
       to: params.email,
       subject: copy.subject,
       text,
     });
+    if (error) throw error;
     return true;
   } catch (err) {
     console.error('confirmation email error:', err);
