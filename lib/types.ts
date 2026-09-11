@@ -30,10 +30,21 @@ export interface BookingRequest {
   resort_other: string;
   message: string;
   status: 'pending' | 'confirmed' | 'cancelled';
+  locale: Locale;
   created_at: string;
   slot?: AvailabilitySlot;
   /** All days linked to this booking (via booking_request_slots), when fetched */
   slots?: AvailabilitySlot[];
+}
+
+export interface EmailLog {
+  id: string;
+  type: 'booking_notification' | 'booking_confirmation';
+  booking_request_id: string | null;
+  recipient: string;
+  status: 'sent' | 'failed';
+  error_message: string | null;
+  created_at: string;
 }
 
 export interface Review {

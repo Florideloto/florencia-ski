@@ -6,7 +6,7 @@ import { useRouter } from 'next/navigation';
 import { useLocale } from 'next-intl';
 import { DayPicker } from 'react-day-picker';
 import { format, eachDayOfInterval, startOfMonth, endOfMonth, getDay, isWithinInterval, isBefore, parseISO } from 'date-fns';
-import type { BlockedDate, BookingRequest, Review } from '@/lib/types';
+import type { BlockedDate, BookingRequest, EmailLog, Review } from '@/lib/types';
 import Logo from '@/components/Logo';
 import StarRating from '@/components/reviews/StarRating';
 import 'react-day-picker/style.css';
@@ -39,6 +39,8 @@ export default function AdminDashboardPage() {
   const [blockedDates, setBlockedDates] = useState<BlockedDate[]>([]);
   const [bookings, setBookings] = useState<BookingRequest[]>([]);
   const [reviews, setReviews] = useState<Review[]>([]);
+  const [emailLogs, setEmailLogs] = useState<EmailLog[]>([]);
+  const [emailStatusMsg, setEmailStatusMsg] = useState('');
   const [selectedDays, setSelectedDays] = useState<Date[]>([]);
   const [blockNote, setBlockNote] = useState('');
   const [month, setMonth] = useState<Date>(SEASON_START);
@@ -84,12 +86,22 @@ export default function AdminDashboardPage() {
     setReviews(data ?? []);
   }, []);
 
+  const fetchEmailLogs = useCallback(async () => {
+    const { data } = await supabase
+      .from('email_logs')
+      .select('*')
+      .eq('status', 'failed')
+      .order('created_at', { ascending: false })
+      .limit(20);
+    setEmailLogs(data ?? []);
+  }, []);
+
   useEffect(() => {
     checkAuth().then(async () => {
-      await Promise.all([fetchBlockedDates(), fetchBookings(), fetchReviews()]);
+      await Promise.all([fetchBlockedDates(), fetchBookings(), fetchReviews(), fetchEmailLogs()]);
       setLoading(false);
     });
-  }, [checkAuth, fetchBlockedDates, fetchBookings, fetchReviews]);
+  }, [checkAuth, fetchBlockedDates, fetchBookings, fetchReviews, fetchEmailLogs]);
 
   async function handleSignOut() {
     await supabase.auth.signOut();
@@ -166,6 +178,28 @@ export default function AdminDashboardPage() {
         await supabase.from('availability_slots').update({ is_booked: true }).in('id', slotIds);
       } else if (status === 'cancelled' && wasConfirmed) {
         await supabase.from('availability_slots').update({ is_booked: false }).in('id', slotIds);
+      }
+
+      if (status === 'confirmed' && !wasConfirmed) {
+        setEmailStatusMsg('Enviando email de confirmación…');
+        const { data: { session } } = await supabase.auth.getSession();
+        try {
+          const res = await fetch(`/api/bookings/${id}/confirm-email`, {
+            method: 'POST',
+            headers: { Authorization: `Bearer ${session?.access_token ?? ''}` },
+          });
+          const body = await res.json();
+          setEmailStatusMsg(
+            res.ok && body.success
+              ? `✓ Email de confirmación enviado a ${booking.client_email}.`
+              : `⚠ La reserva quedó confirmada, pero el email a ${booking.client_email} falló. Revisá "Envíos fallidos" abajo.`
+          );
+        } catch {
+          setEmailStatusMsg(
+            `⚠ La reserva quedó confirmada, pero el email a ${booking.client_email} falló. Revisá "Envíos fallidos" abajo.`
+          );
+        }
+        await fetchEmailLogs();
       }
     }
     await fetchBookings();
@@ -500,7 +534,35 @@ export default function AdminDashboardPage() {
 
         {/* Bookings tab */}
         {tab === 'bookings' && (
-          <div className="bg-brand-navy border border-brand-border">
+          <div className="flex flex-col gap-4">
+            {emailStatusMsg && (
+              <p className="text-brand-ice text-sm">{emailStatusMsg}</p>
+            )}
+
+            {emailLogs.length > 0 && (
+              <div className="bg-brand-navy border border-red-500/30 p-4">
+                <h3
+                  className="text-red-400 text-sm mb-3"
+                  style={{ fontFamily: 'var(--font-barlow)', fontWeight: 800, textTransform: 'uppercase', letterSpacing: '0.04em' }}
+                >
+                  ⚠ Envíos fallidos ({emailLogs.length})
+                </h3>
+                <div className="flex flex-col gap-2 max-h-48 overflow-y-auto pr-1">
+                  {emailLogs.map((log) => (
+                    <div key={log.id} className="text-xs text-brand-subtext border-b border-brand-border pb-2 last:border-0">
+                      <span className="text-white font-medium">
+                        {log.type === 'booking_notification' ? 'Aviso a Florencia' : 'Confirmación al cliente'}
+                      </span>
+                      {' → '}
+                      {log.recipient} · {new Date(log.created_at).toLocaleString()}
+                      {log.error_message && <p className="text-red-400 mt-0.5">{log.error_message}</p>}
+                    </div>
+                  ))}
+                </div>
+              </div>
+            )}
+
+            <div className="bg-brand-navy border border-brand-border">
             {bookings.length === 0 ? (
               <div className="p-10 text-center text-brand-subtext">No booking requests yet.</div>
             ) : (
@@ -572,6 +634,7 @@ export default function AdminDashboardPage() {
                 ))}
               </div>
             )}
+            </div>
           </div>
         )}
 

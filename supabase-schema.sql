@@ -155,6 +155,32 @@ create policy "Admin can manage blocked dates" on blocked_dates
   for all using (auth.role() = 'authenticated');
 
 -- =============================================
+-- 9. Email notification system: remember the language the client booked
+-- in (so the confirmation email matches it), plus a visible log so a
+-- failed send never disappears silently — previously only console.error,
+-- invisible outside Vercel's own runtime logs.
+-- =============================================
+alter table booking_requests add column if not exists locale text not null default 'es'
+  check (locale in ('en', 'es', 'th'));
+
+create table if not exists email_logs (
+  id uuid primary key default gen_random_uuid(),
+  type text not null check (type in ('booking_notification', 'booking_confirmation')),
+  booking_request_id uuid references booking_requests(id) on delete set null,
+  recipient text not null,
+  status text not null check (status in ('sent', 'failed')),
+  error_message text,
+  created_at timestamptz default now()
+);
+
+alter table email_logs enable row level security;
+create policy "Admin can read email logs" on email_logs
+  for select using (auth.role() = 'authenticated');
+-- No insert policy: rows are only ever written by the server (service role
+-- key), which bypasses RLS — clients and the admin browser session never
+-- write to this table directly.
+
+-- =============================================
 -- Notes
 -- =============================================
 -- After running this SQL:

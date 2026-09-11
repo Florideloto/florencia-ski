@@ -38,11 +38,12 @@ async function resolveSlotId(
 export async function POST(request: NextRequest) {
   try {
     const body = await request.json();
-    const { slots, name, email, phone, service, resort, resort_other, message } = body;
+    const { slots, name, email, phone, service, resort, resort_other, message, locale } = body;
 
     if (!Array.isArray(slots) || slots.length === 0 || !name || !email || !service || !resort) {
       return NextResponse.json({ error: 'Missing required fields' }, { status: 400 });
     }
+    const bookingLocale = ['en', 'es', 'th'].includes(locale) ? locale : 'es';
     if (resort === 'Other' && !resort_other) {
       return NextResponse.json({ error: 'Missing resort_other' }, { status: 400 });
     }
@@ -81,6 +82,7 @@ export async function POST(request: NextRequest) {
         resort_other: resort === 'Other' ? resort_other : '',
         message: message ?? '',
         status: 'pending',
+        locale: bookingLocale,
       })
       .select('id')
       .single();
@@ -93,6 +95,7 @@ export async function POST(request: NextRequest) {
     if (linkError) throw linkError;
 
     await sendBookingNotificationEmail({
+      bookingId: booking.id,
       name,
       email,
       phone: phone ?? '',

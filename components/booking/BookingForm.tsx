@@ -24,7 +24,8 @@ function parseSlotDate(dateStr: string): Date {
 
 export default function BookingForm({ slots, resort, resortOther, onBack }: Props) {
   const t = useTranslations('booking');
-  const dateFnsLocale = getDateFnsLocale(useLocale());
+  const locale = useLocale();
+  const dateFnsLocale = getDateFnsLocale(locale);
   const [status, setStatus] = useState<Status>('idle');
   const [form, setForm] = useState({
     name: '',
@@ -53,6 +54,7 @@ export default function BookingForm({ slots, resort, resortOther, onBack }: Prop
           slots: sortedSlots.map((s) => ({ date: s.date, start_time: s.start_time, end_time: s.end_time })),
           resort,
           resort_other: resort === 'Other' ? resortOther : '',
+          locale,
         }),
       });
       if (res.ok) {
