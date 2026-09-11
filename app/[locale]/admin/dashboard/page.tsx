@@ -67,9 +67,12 @@ export default function AdminDashboardPage() {
   }, []);
 
   const fetchBookings = useCallback(async () => {
+    // "availability_slots" is explicitly disambiguated: booking_requests can reach it
+    // either directly (slot_id) or through booking_request_slots, and PostgREST
+    // refuses to guess which one once both relationships are in its schema cache.
     const { data } = await supabase
       .from('booking_requests')
-      .select('*, slot:availability_slots(*), booking_request_slots(slot:availability_slots(*))')
+      .select('*, slot:availability_slots!booking_requests_slot_id_fkey(*), booking_request_slots(slot:availability_slots(*))')
       .order('created_at', { ascending: false });
     const withSlots = (data ?? []).map((b) => ({
       ...b,
