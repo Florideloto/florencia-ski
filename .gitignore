@@ -39,6 +39,9 @@ yarn-error.log*
 # vercel
 .vercel
 
+# scratch files (previews, one-off exports — never part of the app)
+/scratch/
+
 # typescript
 *.tsbuildinfo
 next-env.d.ts
