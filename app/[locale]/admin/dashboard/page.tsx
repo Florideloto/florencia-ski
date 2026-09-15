@@ -5,10 +5,13 @@ import { supabase } from '@/lib/supabase';
 import { useRouter } from 'next/navigation';
 import { useLocale } from 'next-intl';
 import { DayPicker } from 'react-day-picker';
+import type { DayButtonProps } from 'react-day-picker';
 import { format, eachDayOfInterval, startOfMonth, endOfMonth, getDay, isWithinInterval, isBefore, parseISO } from 'date-fns';
-import type { BlockedDate, BookingRequest, EmailLog, Review } from '@/lib/types';
+import type { BlockedDate, BookingRequest, EmailLog, Resort, Review } from '@/lib/types';
+import { RESORT_COLORS, RESORT_LABELS, RESORTS } from '@/lib/resortColors';
 import Logo from '@/components/Logo';
 import StarRating from '@/components/reviews/StarRating';
+import ManualBookingModal from '@/components/admin/ManualBookingModal';
 import 'react-day-picker/style.css';
 
 const SEASON_START = new Date(2026, 11, 1);
@@ -31,6 +34,28 @@ function mergeDays(current: Date[], additions: Date[]): Date[] {
   return Array.from(map.values()).sort((a, b) => a.getTime() - b.getTime());
 }
 
+// Adds a small colored dot per resort below the day number — one per active
+// booking on that day, using the same colors as the legend and lists.
+function makeDayButtonWithDots(resortsByDate: Map<string, Resort[]>) {
+  return function DayButtonWithDots({ day, modifiers: _modifiers, children, ...rest }: DayButtonProps) {
+    const resorts = resortsByDate.get(format(day.date, 'yyyy-MM-dd')) ?? [];
+    return (
+      <button {...rest}>
+        <span className="flex flex-col items-center justify-center gap-0.5">
+          <span>{children}</span>
+          {resorts.length > 0 && (
+            <span className="flex gap-0.5">
+              {resorts.map((r, i) => (
+                <span key={`${r}-${i}`} className={`w-1.5 h-1.5 rounded-full ${RESORT_COLORS[r]}`} />
+              ))}
+            </span>
+          )}
+        </span>
+      </button>
+    );
+  };
+}
+
 export default function AdminDashboardPage() {
   const router = useRouter();
   const locale = useLocale();
@@ -50,6 +75,7 @@ export default function AdminDashboardPage() {
   const [saving, setSaving] = useState(false);
   const [message, setMessage] = useState('');
   const [loading, setLoading] = useState(true);
+  const [showManualModal, setShowManualModal] = useState(false);
 
   const checkAuth = useCallback(async () => {
     const { data: { session } } = await supabase.auth.getSession();
@@ -232,6 +258,7 @@ export default function AdminDashboardPage() {
     .filter((b) => b.status !== 'cancelled')
     .flatMap((b) => {
       const bookingSlots = b.slots && b.slots.length > 0 ? b.slots : b.slot ? [b.slot] : [];
+      const resortKey: Resort = b.resort ?? 'Other';
       return bookingSlots.map((s) => ({
         key: `${b.id}-${s.id}`,
         date: s.date,
@@ -239,12 +266,24 @@ export default function AdminDashboardPage() {
         end_time: s.end_time,
         clientName: b.client_name,
         resort: b.resort === 'Other' ? b.resort_other : b.resort,
+        resortKey,
         status: b.status,
       }));
     })
     .sort((a, b) => a.date.localeCompare(b.date));
 
   const takenDates = new Set(agendaRows.filter((r) => r.status === 'confirmed').map((r) => r.date));
+
+  // One dot per active booking's resort, per date — feeds the calendar dots,
+  // deliberately not deduped: two bookings on the same day (e.g. a cancelled
+  // one reopening the date) still show as separate dots.
+  const resortsByDate = new Map<string, Resort[]>();
+  for (const row of agendaRows) {
+    const list = resortsByDate.get(row.date) ?? [];
+    list.push(row.resortKey);
+    resortsByDate.set(row.date, list);
+  }
+  const disabledForManualBooking = new Set([...blockedDateSet, ...takenDates]);
 
   const statusColor = {
     pending: 'text-yellow-400',
@@ -320,9 +359,19 @@ export default function AdminDashboardPage() {
               >
                 Block Days
               </h2>
-              <p className="text-brand-subtext text-xs mb-6">
+              <p className="text-brand-subtext text-xs mb-4">
                 Every day is bookable by default. Pick days below to mark them unavailable.
               </p>
+
+              {/* Resort color legend */}
+              <div className="flex flex-wrap gap-x-4 gap-y-1.5 mb-4 pb-4 border-b border-brand-border">
+                {RESORTS.map((r) => (
+                  <span key={r} className="flex items-center gap-1.5 text-xs text-brand-subtext">
+                    <span className={`w-2.5 h-2.5 rounded-full ${RESORT_COLORS[r]}`} />
+                    {RESORT_LABELS[r]}
+                  </span>
+                ))}
+              </div>
 
               <DayPicker
                 mode="multiple"
@@ -332,6 +381,7 @@ export default function AdminDashboardPage() {
                 onMonthChange={setMonth}
                 startMonth={SEASON_START}
                 endMonth={SEASON_END}
+                components={{ DayButton: makeDayButtonWithDots(resortsByDate) }}
                 modifiers={{
                   blocked: (date) => blockedDateSet.has(format(date, 'yyyy-MM-dd')),
                   taken: (date) => takenDates.has(format(date, 'yyyy-MM-dd')),
@@ -518,9 +568,15 @@ export default function AdminDashboardPage() {
                           <p className="text-white text-sm font-medium">
                             {row.date} · {row.start_time.slice(0, 5)}–{row.end_time.slice(0, 5)}
                           </p>
-                          <p className="text-brand-subtext text-xs">
+                          <p className="text-brand-subtext text-xs flex items-center gap-1.5">
                             {row.clientName}
-                            {row.resort && ` · 📍 ${row.resort}`}
+                            {row.resort && (
+                              <span className="flex items-center gap-1">
+                                {' · '}
+                                <span className={`w-2 h-2 rounded-full shrink-0 ${RESORT_COLORS[row.resortKey]}`} />
+                                📍 {row.resort}
+                              </span>
+                            )}
                           </p>
                         </div>
                         <span className={`text-xs font-semibold uppercase tracking-wider shrink-0 ml-3 ${statusColor[row.status]}`}>
@@ -538,6 +594,16 @@ export default function AdminDashboardPage() {
         {/* Bookings tab */}
         {tab === 'bookings' && (
           <div className="flex flex-col gap-4">
+            <div className="flex justify-end">
+              <button
+                onClick={() => setShowManualModal(true)}
+                className="px-4 py-2.5 bg-brand-ice text-brand-dark text-xs tracking-widest uppercase font-bold hover:bg-white transition-colors"
+                style={{ fontFamily: 'var(--font-barlow)' }}
+              >
+                + Nueva Reserva Manual
+              </button>
+            </div>
+
             {emailStatusMsg && (
               <p className="text-brand-ice text-sm">{emailStatusMsg}</p>
             )}
@@ -589,7 +655,8 @@ export default function AdminDashboardPage() {
                             {booking.service_type}
                           </span>
                           {booking.resort && (
-                            <span className="px-2 py-1 bg-brand-dark border border-brand-border">
+                            <span className="flex items-center gap-1.5 px-2 py-1 bg-brand-dark border border-brand-border">
+                              <span className={`w-2 h-2 rounded-full shrink-0 ${RESORT_COLORS[booking.resort]}`} />
                               📍 {booking.resort === 'Other' ? booking.resort_other : booking.resort}
                             </span>
                           )}
@@ -702,6 +769,17 @@ export default function AdminDashboardPage() {
           </div>
         )}
       </div>
+
+      {showManualModal && (
+        <ManualBookingModal
+          disabledDates={disabledForManualBooking}
+          onClose={() => setShowManualModal(false)}
+          onCreated={() => {
+            fetchBookings();
+            fetchBlockedDates();
+          }}
+        />
+      )}
     </div>
   );
 }
