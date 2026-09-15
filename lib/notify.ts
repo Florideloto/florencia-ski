@@ -149,7 +149,7 @@ const CONFIRMATION_COPY: Record<
     greeting: (name) => `Hola ${name},`,
     intro: '¡Qué alegría que vengas a esquiar conmigo! Tu reserva quedó confirmada:',
     closing:
-      'Nos vemos en la montaña — va a ser un día para disfrutar a fondo. Cualquier duda o cambio de planes, escribime por WhatsApp o respondé este email.',
+      'Nos vemos en la montaña — va a ser un día para disfrutar a fondo. Cualquier duda o cambio de planes, escribime por WhatsApp o a floriseg@proton.me.',
     signoff: '¡Nos vemos en la nieve!\nFlorencia',
     durationHalf: '3 horas',
     durationFull: 'Día Completo',
@@ -160,7 +160,7 @@ const CONFIRMATION_COPY: Record<
     greeting: (name) => `Hi ${name},`,
     intro: "So happy you're joining me on the mountain! Your booking is confirmed:",
     closing:
-      "Get ready for a day you'll want to relive. Any questions or changes, just message me on WhatsApp or reply to this email.",
+      "Get ready for a day you'll want to relive. Any questions or changes, just message me on WhatsApp or at floriseg@proton.me.",
     signoff: 'See you on the snow!\nFlorencia',
     durationHalf: '3 hours',
     durationFull: 'Full Day',
@@ -171,7 +171,7 @@ const CONFIRMATION_COPY: Record<
     greeting: (name) => `สวัสดีค่ะคุณ ${name}`,
     intro: 'ดีใจมากที่จะได้สอนเล่นสกีด้วยกันค่ะ! การจองของคุณได้รับการยืนยันแล้ว:',
     closing:
-      'เตรียมตัวไว้สำหรับวันที่คุณจะประทับใจไม่รู้ลืมนะคะ หากมีคำถามหรือต้องการเปลี่ยนแปลง ทักมาทาง WhatsApp หรือตอบกลับอีเมลนี้ได้เลยค่ะ',
+      'เตรียมตัวไว้สำหรับวันที่คุณจะประทับใจไม่รู้ลืมนะคะ หากมีคำถามหรือต้องการเปลี่ยนแปลง ทักมาทาง WhatsApp หรืออีเมล floriseg@proton.me ได้เลยค่ะ',
     signoff: 'แล้วเจอกันบนลานสกีนะคะ!\nFlorencia',
     durationHalf: '3 ชั่วโมง',
     durationFull: 'เต็มวัน',
